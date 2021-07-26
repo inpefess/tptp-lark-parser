@@ -1,0 +1,4 @@
+lark
+orjson
+sphinx-autodoc-typehints
+importlib_resources
