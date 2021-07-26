@@ -1,0 +1,7 @@
+venv*/
+doc/build/
+.mypy_cache/
+dist/
+.idea/
+coverage.*
+test-results/
