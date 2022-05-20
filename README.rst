@@ -13,30 +13,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
- |Binder|\ |PyPI version|\ |CircleCI|\ |Documentation Status|\ |codecov|
+|Binder|\ |PyPI version|\ |CircleCI|\ |Documentation Status|\ |codecov|
 
 tptp-lark-parser
 ================
 
-``tptp-lark-parser`` is an `OpenAI Gym <https://gym.openai.com/>`__
-environment for reinforcement learning (RL) agents capable of proving
-theorems. Currently, only theorems written in `TPTP
-library <http://tptp.org>`__ formal language in clausal normal form
-(CNF) are supported. ``tptp-lark-parser`` implements the ‘given clause’
-algorithm (similar to one used in
-`Vampire <https://github.com/vprover/vampire>`__ and `E
-Prover <https://github.com/eprover/eprover>`__). Being written in
-Python, ``tptp-lark-parser`` was inspired by
-`PyRes <https://github.com/eprover/PyRes>`__. In contrast to monolithic
-architecture of a typical Automated Theorem Prover (ATP),
-``tptp-lark-parser`` gives different agents opportunities to select
-clauses themselves and train from their experience. Combined with a
-particular agent, ``tptp-lark-parser`` can work as an ATP.
-
-``tptp-lark-parser`` can be interesting for RL practitioners willing to
-apply their experience to theorem proving without coding all the
-logic-related stuff themselves. It also can be useful for automated
-deduction researchers who want to create an RL-empowered ATP.
+``tptp-lark-parser`` is an parser for the `TPTP library
+<http://tptp.org>`__ language using the `Lark parser
+<https://github.com/lark-parser/lark>`__.
 
 How to Install
 ==============
