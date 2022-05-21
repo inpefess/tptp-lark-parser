@@ -1,11 +1,11 @@
 # Copyright 2022 Boris Shminke
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,15 @@ else:
 # pylint: disable=too-few-public-methods
 class TPTPParser:
     """
+    .. _TPTPParser:
+
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function)
     >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))),), inference_rule="resolution", inference_parents=("one", "two"))
     >>> TPTPParser().parse(str(clause), "")[0] == clause
     True
+    >>> print(clause.to_java())
+    boolean x...(Object Y, Object X) {return !(this_is_a_test_case(X) == Y);}
     >>> tptp_parser = TPTPParser()
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
@@ -47,11 +51,12 @@ class TPTPParser:
     ...     ))
     ...     .read_text()
     ... )
-    >>> print("\\n".join(map(str, tptp_parser.parse(
+    >>> parsed_clauses = tptp_parser.parse(
     ...     tptp_text,
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join("resources", "TPTP-mock"))
-    ... ))))
+    ... )
+    >>> print("\\n".join(map(str, parsed_clauses)))
     cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
     cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
     cnf(test_axiom, axiom, test_constant = test_constant_2).
