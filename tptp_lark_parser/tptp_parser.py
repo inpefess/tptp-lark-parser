@@ -1,11 +1,11 @@
 # Copyright 2022 Boris Shminke
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,25 +21,38 @@ from typing import Tuple
 
 from lark import Lark, Token
 
-from tptp_lark_parser.grammar import Clause
 from tptp_lark_parser.cnf_parser import CNFParser
+from tptp_lark_parser.grammar import Clause
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 9:
     # pylint: disable=no-name-in-module, import-error
     from importlib.resources import files  # type: ignore
-else:
+else:  # pragma: no cover
     from importlib_resources import files  # pylint: disable=import-error
 
 
 # pylint: disable=too-few-public-methods
 class TPTPParser:
     """
+    .. _TPTPParser:
+
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function)
-    >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))),), inference_rule="resolution", inference_parents=("one", "two"))
-    >>> TPTPParser().parse(str(clause), "")[0] == clause
-    True
     >>> tptp_parser = TPTPParser()
+    >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))), Literal(False, Predicate("=", (Function("f", ()), Function("g", ())))), Literal(False, Predicate("p", (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
+    >>> tptp_parser.parse(str(clause))[0] == clause
+    True
+    >>> print(clause.to_java())
+    boolean x...(Object X, Object Y) {
+        return !(this_is_a_test_case(X) == Y) || (f() == g()) || p(X);
+    }
+    >>> empty_clause = Clause(literals=())
+    >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
+    True
+    >>> print(empty_clause.to_java())
+    boolean x...() {
+        return false;
+    }
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join(
@@ -47,11 +60,12 @@ class TPTPParser:
     ...     ))
     ...     .read_text()
     ... )
-    >>> print("\\n".join(map(str, tptp_parser.parse(
+    >>> parsed_clauses = tptp_parser.parse(
     ...     tptp_text,
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join("resources", "TPTP-mock"))
-    ... ))))
+    ... )
+    >>> print("\\n".join(map(str, parsed_clauses)))
     cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
     cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
     cnf(test_axiom, axiom, test_constant = test_constant_2).
@@ -67,7 +81,9 @@ class TPTPParser:
             start="tptp_file",
         )
 
-    def parse(self, tptp_text: str, tptp_folder: str) -> Tuple[Clause, ...]:
+    def parse(
+        self, tptp_text: str, tptp_folder: str = "."
+    ) -> Tuple[Clause, ...]:
         """
         recursively parse a string containing a TPTP problem
 

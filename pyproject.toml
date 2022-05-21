@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.0.1"
+version = "0.0.2"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -26,7 +26,6 @@ include = ["tptp_lark_parser/py.typed"]
 python = ">= 3.7.1, < 3.11"
 lark-parser = "*"
 importlib_resources = {version = "*", markers = "python_version < \"3.9\""}
-orjson = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -53,9 +52,15 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=98 --junit-xml test-results/tptp-lark-parser.xml"
+addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=100 --junit-xml test-results/tptp-lark-parser.xml"
 testpaths = ["tptp_lark_parser"]
-doctest_optionflags = "NORMALIZE_WHITESPACE"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "from importlib.resources import files"
+]
 
 [tool.pylint.master]
 disable = "bad-continuation"

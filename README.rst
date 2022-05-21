@@ -41,6 +41,14 @@ One can also run it in a Docker container:
 How to use
 ==========
 
+.. code:: python
+
+   from tptp_lark_parser.tptp_parser import TPTPParser
+
+   tptp_parser = TPTPParser()
+   parsed_text = tptp_parser.parse("cnf(test, axiom, ~ p(Y, X) | q(X, Y)).")
+   clause_literals = parsed_text[0].literals
+   
 See `the
 notebook <https://github.com/inpefess/tptp-lark-parser/blob/master/examples/example.ipynb>`__
 or run it in

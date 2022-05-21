@@ -8,5 +8,5 @@ cd ..
 flake8 ${PACKAGE_NAME}
 pylint ${PACKAGE_NAME}
 mypy ${PACKAGE_NAME}
-pytest ${PACKAGE_NAME}
+pytest
 scc -i py ${PACKAGE_NAME}
