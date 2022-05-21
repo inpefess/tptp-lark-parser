@@ -26,7 +26,6 @@ include = ["tptp_lark_parser/py.typed"]
 python = ">= 3.7.1, < 3.11"
 lark-parser = "*"
 importlib_resources = {version = "*", markers = "python_version < \"3.9\""}
-orjson = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"
