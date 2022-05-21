@@ -169,7 +169,7 @@ class CNFParser(Transformer):
         basic clause structure
         """
         if len(children) == 1:
-            if children[0].atom.name == "$false":
+            if children[0].atom.name == "$false" and not children[0].negated:
                 return Clause(tuple())
             return Clause(tuple(children))
         literals = ()
