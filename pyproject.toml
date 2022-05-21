@@ -53,9 +53,15 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=98 --junit-xml test-results/tptp-lark-parser.xml"
+addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=100 --junit-xml test-results/tptp-lark-parser.xml"
 testpaths = ["tptp_lark_parser"]
-doctest_optionflags = "NORMALIZE_WHITESPACE"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "from importlib.resources import files"
+]
 
 [tool.pylint.master]
 disable = "bad-continuation"

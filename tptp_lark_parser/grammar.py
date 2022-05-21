@@ -199,8 +199,10 @@ class Clause:
         signature = ", ".join(
             map(
                 lambda variable: f"Object {variable}",
-                tuple(set(*chain(map(itemgetter(1), literals)))),
+                sorted(tuple(set(chain(*map(itemgetter(1), literals))))),
             )
         )
         body = " || ".join(map(itemgetter(0), literals))
-        return f"boolean {self.label}({signature}) {{return {body};}}"
+        return f"""boolean {self.label}({signature}) {{
+    return {'false' if body == '' else body};
+}}"""
