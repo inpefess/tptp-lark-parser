@@ -21,8 +21,8 @@ from typing import Tuple
 
 from lark import Lark, Token
 
-from tptp_lark_parser.grammar import Clause
 from tptp_lark_parser.cnf_parser import CNFParser
+from tptp_lark_parser.grammar import Clause
 
 if sys.version_info.major == 3 and sys.version_info.minor >= 9:
     # pylint: disable=no-name-in-module, import-error
@@ -67,7 +67,9 @@ class TPTPParser:
             start="tptp_file",
         )
 
-    def parse(self, tptp_text: str, tptp_folder: str) -> Tuple[Clause, ...]:
+    def parse(
+        self, tptp_text: str, tptp_folder: str = "."
+    ) -> Tuple[Clause, ...]:
         """
         recursively parse a string containing a TPTP problem
 
