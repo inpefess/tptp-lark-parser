@@ -49,7 +49,7 @@ class TPTPParser:
     >>> print(clause.to_python())
     def x...(X, Y):
         return ~(this_is_a_test_case(X) == Y) | (f() == g()) | p(X)
-
+    <BLANKLINE>
     >>> empty_clause = Clause(literals=())
     >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
     True
@@ -60,7 +60,7 @@ class TPTPParser:
     >>> print(empty_clause.to_python())
     def x...():
         return false
-
+    <BLANKLINE>
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join(
