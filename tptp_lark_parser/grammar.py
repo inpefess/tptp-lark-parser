@@ -16,10 +16,19 @@ Grammar
 ********
 """
 from dataclasses import dataclass, field
+from enum import Enum
+from functools import partial
 from itertools import chain
 from operator import itemgetter
 from typing import Optional, Tuple, Union
 from uuid import uuid1
+
+
+class OutputLanguage(Enum):
+    """one can transform clauses to programming language snippets"""
+
+    PYTHON = 0
+    JAVA = 1
 
 
 @dataclass(frozen=True)
@@ -127,8 +136,13 @@ def _literal_to_tptp(literal: Literal) -> str:
     return res
 
 
-def _literal_to_java(literal: Literal) -> Tuple[str, Tuple[str, ...]]:
-    res = "!" if literal.negated else ""
+def _literal_to_code(
+    literal: Literal, language: OutputLanguage
+) -> Tuple[str, Tuple[str, ...]]:
+    if literal.negated:
+        res = "!" if language == OutputLanguage.JAVA else "~"
+    else:
+        res = ""
     arguments = tuple(_term_to_java(term) for term in literal.atom.arguments)
     if literal.atom.name != "=":
         res += (
@@ -191,11 +205,16 @@ class Clause:
 
     def to_java(self) -> str:
         """
-        see ``tptp_parser.py`` for the usage examples
+        see :ref:`TPTPParser <tptp-parser>` for the usage examples
 
         :returns: a Java code snippet representing the clause syntax only
         """
-        literals = tuple(map(_literal_to_java, self.literals))
+        literals = tuple(
+            map(
+                partial(_literal_to_code, language=OutputLanguage.JAVA),
+                self.literals,
+            )
+        )
         signature = ", ".join(
             map(
                 lambda variable: f"Object {variable}",
@@ -206,3 +225,23 @@ class Clause:
         return f"""boolean {self.label}({signature}) {{
     return {'false' if body == '' else body};
 }}"""
+
+    def to_python(self) -> str:
+        """
+        see :ref:`TPTPParser <tptp-parser>` for the usage examples
+
+        :returns: a Python code snippet representing the clause syntax only
+        """
+        literals = tuple(
+            map(
+                partial(_literal_to_code, language=OutputLanguage.PYTHON),
+                self.literals,
+            )
+        )
+        signature = ", ".join(
+            sorted(tuple(set(chain(*map(itemgetter(1), literals)))))
+        )
+        body = " | ".join(map(itemgetter(0), literals))
+        return f"""def {self.label}({signature}):
+    return {'false' if body == '' else body}
+"""
