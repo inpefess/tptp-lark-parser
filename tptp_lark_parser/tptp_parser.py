@@ -34,7 +34,7 @@ else:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 class TPTPParser:
     """
-    .. _TPTPParser:
+    .. _tptp-parser:
 
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function)
@@ -46,6 +46,10 @@ class TPTPParser:
     boolean x...(Object X, Object Y) {
         return !(this_is_a_test_case(X) == Y) || (f() == g()) || p(X);
     }
+    >>> print(clause.to_python())
+    def x...(X, Y):
+        return ~(this_is_a_test_case(X) == Y) | (f() == g()) | p(X)
+
     >>> empty_clause = Clause(literals=())
     >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
     True
@@ -53,6 +57,10 @@ class TPTPParser:
     boolean x...() {
         return false;
     }
+    >>> print(empty_clause.to_python())
+    def x...():
+        return false
+
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join(
