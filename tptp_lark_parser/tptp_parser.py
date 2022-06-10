@@ -46,25 +46,9 @@ class TPTPParser:
     >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))), Literal(False, Predicate("=", (Function("f", ()), Function("g", ())))), Literal(False, Predicate("p", (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
-    >>> print(clause.to_java())
-    boolean x...(Object X, Object Y) {
-        return !(this_is_a_test_case(X) == Y) || (f() == g()) || p(X);
-    }
-    >>> print(clause.to_python())
-    def x...(X, Y):
-        return ~(this_is_a_test_case(X) == Y) | (f() == g()) | p(X)
-    <BLANKLINE>
     >>> empty_clause = Clause(literals=())
     >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
     True
-    >>> print(empty_clause.to_java())
-    boolean x...() {
-        return false;
-    }
-    >>> print(empty_clause.to_python())
-    def x...():
-        return false
-    <BLANKLINE>
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join(

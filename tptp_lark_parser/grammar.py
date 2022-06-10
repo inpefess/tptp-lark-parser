@@ -18,19 +18,8 @@ Grammar.
 ********
 """
 from dataclasses import dataclass, field
-from enum import Enum
-from functools import partial
-from itertools import chain
-from operator import itemgetter
 from typing import Optional, Tuple, Union
 from uuid import uuid1
-
-
-class OutputLanguage(Enum):
-    """One can transform clauses to programming language snippets."""
-
-    PYTHON = 0
-    JAVA = 1
 
 
 @dataclass(frozen=True)
@@ -106,18 +95,6 @@ def _term_to_tptp(term: Term) -> str:
     return term.name
 
 
-def _term_to_java(term: Term) -> Tuple[str, Tuple[str, ...]]:
-    if isinstance(term, Function):
-        arguments = tuple(
-            _term_to_java(argument) for argument in term.arguments
-        )
-        return (
-            f"{term.name}({','.join(map(itemgetter(0), arguments))})",
-            tuple(chain(*map(itemgetter(1), arguments))),
-        )
-    return term.name, (term.name,)
-
-
 def _literal_to_tptp(literal: Literal) -> str:
     res = "~" if literal.negated else ""
     if literal.atom.name != "=":
@@ -136,23 +113,6 @@ def _literal_to_tptp(literal: Literal) -> str:
             + _term_to_tptp(literal.atom.arguments[1])
         )
     return res
-
-
-def _literal_to_code(
-    literal: Literal, language: OutputLanguage
-) -> Tuple[str, Tuple[str, ...]]:
-    if literal.negated:
-        res = "!" if language == OutputLanguage.JAVA else "~"
-    else:
-        res = ""
-    arguments = tuple(_term_to_java(term) for term in literal.atom.arguments)
-    if literal.atom.name != "=":
-        res += (
-            f"{literal.atom.name}({','.join(map(itemgetter(0), arguments))})"
-        )
-    else:
-        res += f"({arguments[0][0]} == {arguments[1][0]})"
-    return res, tuple(chain(*map(itemgetter(1), arguments)))
 
 
 @dataclass(frozen=True)
@@ -206,46 +166,3 @@ class Clause:
                 + "])"
             )
         return res + ")."
-
-    def to_java(self) -> str:
-        """
-        See :ref:`TPTPParser <tptp-parser>` for the usage examples.
-
-        :returns: a Java code snippet representing the clause syntax only
-        """
-        literals = tuple(
-            map(
-                partial(_literal_to_code, language=OutputLanguage.JAVA),
-                self.literals,
-            )
-        )
-        signature = ", ".join(
-            map(
-                lambda variable: f"Object {variable}",
-                sorted(tuple(set(chain(*map(itemgetter(1), literals))))),
-            )
-        )
-        body = " || ".join(map(itemgetter(0), literals))
-        return f"""boolean {self.label}({signature}) {{
-    return {'false' if body == '' else body};
-}}"""
-
-    def to_python(self) -> str:
-        """
-        See :ref:`TPTPParser <tptp-parser>` for the usage examples.
-
-        :returns: a Python code snippet representing the clause syntax only
-        """
-        literals = tuple(
-            map(
-                partial(_literal_to_code, language=OutputLanguage.PYTHON),
-                self.literals,
-            )
-        )
-        signature = ", ".join(
-            sorted(tuple(set(chain(*map(itemgetter(1), literals)))))
-        )
-        body = " | ".join(map(itemgetter(0), literals))
-        return f"""def {self.label}({signature}):
-    return {'false' if body == '' else body}
-"""
