@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# noqa D205
 """
-CNF Parser
+CNF Parser.
 ===========
 """
 import dataclasses
@@ -30,8 +32,9 @@ from tptp_lark_parser.grammar import (
 
 class CNFParser(Transformer):
     """
-    a parser for ``<cnf_formula>`` from Lark parse tree
-    methods are not typed since nobody calls them directly
+    A parser for ``<cnf_formula>`` from Lark parser tree.
+
+    Methods are not typed since nobody calls them directly.
 
     >>> import sys
     >>> import os
@@ -55,36 +58,46 @@ class CNFParser(Transformer):
     """
 
     def __default_token__(self, token):
+        """All the tokens we return as is."""
         return token.value
 
     def __default__(self, data, children, meta):
+        """Pop one element lists.
+
+        By default, if we see a list of only one element, we return that
+        element, not the whole list.
+        """
         if len(children) == 1:
             return children[0]
         return children
 
     @staticmethod
     def _function(children):
-        """
-        a functional symbol with arguments
-        """
+        """Functional symbol with arguments."""
         if len(children) > 1:
             return Function(children[0], tuple(children[1]))
         return Function(children[0], ())
 
     def fof_defined_plain_formula(self, children):
         """
+        Predicate with or without arguments.
+
         <fof_defined_plain_formula> :== <defined_proposition> | <defined_predicate>(<fof_arguments>)
         """
         return self._predicate(children)
 
     def fof_plain_term(self, children):
         """
+        Functional symbol with or without (a constant) arguments.
+
         <fof_plain_term>       ::= <constant> | <functor>(<fof_arguments>)
         """
         return self._function(children)
 
     def fof_defined_term(self, children):
         """
+        Another way to describe a functional symbol.
+
         <fof_defined_term>     ::= <defined_term> | <fof_defined_atomic_term>
         """
         return self._function(children)
@@ -92,18 +105,18 @@ class CNFParser(Transformer):
     @staticmethod
     def variable(children):
         """
-        <variable>             ::= <upper_word>
+        Variable (supposed to be universally quantified).
 
-        a variable (supposed to be universally quantified)
+        <variable>             ::= <upper_word>
         """
         return Variable(children[0])
 
     @staticmethod
     def fof_arguments(children):
         """
-        <fof_arguments>        ::= <fof_term> | <fof_term>,<fof_arguments>
+        List of arguments, organised in pairs.
 
-        a list of arguments, organised in pairs
+        <fof_arguments>        ::= <fof_term> | <fof_term>,<fof_arguments>
         """
         result = ()
         for item in children:
@@ -116,9 +129,9 @@ class CNFParser(Transformer):
     @staticmethod
     def literal(children):
         """
-        <literal>              ::= <fof_atomic_formula> | ~ <fof_atomic_formula> | <fof_infix_unary>
+        Literal is a possible negated predicate.
 
-        a literal is a possible negated predicate
+        <literal>              ::= <fof_atomic_formula> | ~ <fof_atomic_formula> | <fof_infix_unary>
         """
         if children[0] == "~":
             return Literal(True, children[1])
@@ -132,13 +145,15 @@ class CNFParser(Transformer):
 
     @staticmethod
     def _predicate(children):
-        """predicates are atomic formulae"""
+        """Predicates are atomic formulae."""
         if len(children) > 1:
             return Predicate(children[0], tuple(children[1]))
         return Predicate(children[0], ())
 
     def fof_plain_atomic_formula(self, children):
         """
+        Another way for writing predicates.
+
         <fof_plain_atomic_formula> :== <proposition> | <predicate>(<fof_arguments>)
         """
         return self._predicate(children)
@@ -146,27 +161,27 @@ class CNFParser(Transformer):
     @staticmethod
     def fof_defined_infix_formula(children):
         """
-        <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
+        Translte predicates in the infix form to the prefix.
 
-        some predicates are in the infix form, so we translate to them prefix
+        <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
         """
         return Predicate(children[1], (children[0], children[2]))
 
     @staticmethod
     def fof_infix_unary(children):
         """
-        <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
+        Translate predicates in the infix form to the prefix.
 
-        some predicates are in the infix form, so we translate to them prefix
+        <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
         """
         return Predicate(children[1], (children[0], children[2]))
 
     @staticmethod
     def disjunction(children):
         """
-        <disjunction>          ::= <literal> | <disjunction> <vline> <literal>
+        Clause structure.
 
-        basic clause structure
+        <disjunction>          ::= <literal> | <disjunction> <vline> <literal>
         """
         if len(children) == 1:
             if children[0].atom.name == "$false" and not children[0].negated:
@@ -183,9 +198,9 @@ class CNFParser(Transformer):
     @staticmethod
     def cnf_annotated(children):
         """
-        <cnf_annotated>        ::= cnf(<name>,<formula_role>,<cnf_formula> <annotations>).
+        Annotated CNF formula (clause).
 
-        annotated CNF formula (clause)
+        <cnf_annotated>        ::= cnf(<name>,<formula_role>,<cnf_formula> <annotations>).
         """
         clause = children[2]
         inference_rule = None
@@ -207,6 +222,8 @@ class CNFParser(Transformer):
     @staticmethod
     def inference_record(children):
         """
+        Inference record (parents and rule).
+
         <inference_record>     :== inference(<inference_rule>,<useful_info>,
         <inference_parents>)
         """
@@ -215,6 +232,8 @@ class CNFParser(Transformer):
     @staticmethod
     def annotations(children):
         """
+        Annotation (we care only about inference info from it).
+
         <annotations>          ::= ,<source><optional_info> | <null>
         """
         if isinstance(children, list):
@@ -225,6 +244,8 @@ class CNFParser(Transformer):
     @staticmethod
     def parent_info(children):
         """
+        Inference parents.
+
         <parent_info>          :== <source><parent_details>
         """
         return children[0]
@@ -232,6 +253,8 @@ class CNFParser(Transformer):
     @staticmethod
     def parent_list(children):
         """
+        Inference parents lits.
+
         <parent_list>          :== <parent_info> | <parent_info>,<parent_list>
         """
         if len(children) == 2:

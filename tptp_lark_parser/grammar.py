@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# noqa D205
 """
-Grammar
+Grammar.
 ********
 """
 from dataclasses import dataclass, field
@@ -25,7 +27,7 @@ from uuid import uuid1
 
 
 class OutputLanguage(Enum):
-    """one can transform clauses to programming language snippets"""
+    """One can transform clauses to programming language snippets."""
 
     PYTHON = 0
     JAVA = 1
@@ -34,9 +36,9 @@ class OutputLanguage(Enum):
 @dataclass(frozen=True)
 class Variable:
     """
-    .. _variable:
+    A variable is characterised only by its name.
 
-    a variable is characterised only by its name
+    .. _variable:
     """
 
     name: str
@@ -45,9 +47,9 @@ class Variable:
 @dataclass(frozen=True)
 class Function:
     """
-    .. _Function:
+    A functional symbol might be applied to a list of arguments.
 
-    a functional symbol might be applied to a list of arguments
+    .. _Function:
     """
 
     name: str
@@ -65,9 +67,9 @@ Term is either a :ref:`Variable <Variable>` or a :ref:`Function <Function>`
 @dataclass(frozen=True)
 class Predicate:
     """
-    .. _Predicate:
+    A predicate symbol might be applied to a list of arguments.
 
-    a predicate symbol might be applied to a list of arguments
+    .. _Predicate:
     """
 
     name: str
@@ -85,9 +87,9 @@ Proposition is either a :ref:`Predicate <Predicate>` or a :ref:`Term <Term>`
 @dataclass(frozen=True)
 class Literal:
     """
-    .. _Literal:
+    Literal is an atom which can be negated or not.
 
-    literal is an atom which can be negated or not
+    .. _Literal:
     """
 
     negated: bool
@@ -156,9 +158,10 @@ def _literal_to_code(
 @dataclass(frozen=True)
 class Clause:
     """
+    Clause is a disjunction of literals.
+
     .. _Clause:
 
-    clause is a disjunction of literals
 
     :param literals: a list of literals, forming the clause
     :param label: comes from the problem file or starts with ``inferred_`` if
@@ -185,6 +188,7 @@ class Clause:
     birth_step: Optional[int] = None
 
     def __repr__(self):
+        """Print a logical forumla back to TPTP language."""
         res = f"cnf({self.label}, {self.role}, "
         for literal in self.literals:
             res += _literal_to_tptp(literal) + " | "
@@ -205,7 +209,7 @@ class Clause:
 
     def to_java(self) -> str:
         """
-        see :ref:`TPTPParser <tptp-parser>` for the usage examples
+        See :ref:`TPTPParser <tptp-parser>` for the usage examples.
 
         :returns: a Java code snippet representing the clause syntax only
         """
@@ -228,7 +232,7 @@ class Clause:
 
     def to_python(self) -> str:
         """
-        see :ref:`TPTPParser <tptp-parser>` for the usage examples
+        See :ref:`TPTPParser <tptp-parser>` for the usage examples.
 
         :returns: a Python code snippet representing the clause syntax only
         """

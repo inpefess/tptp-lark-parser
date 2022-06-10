@@ -11,9 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# noqa D205
 """
-TPTP Parser
-===========
+TPTP Parser.
+============
 """
 import os
 import sys
@@ -33,7 +35,9 @@ else:  # pragma: no cover
 
 # pylint: disable=too-few-public-methods
 class TPTPParser:
-    """
+    r"""
+    a TPTP parser.
+
     .. _tptp-parser:
 
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
@@ -73,7 +77,7 @@ class TPTPParser:
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join("resources", "TPTP-mock"))
     ... )
-    >>> print("\\n".join(map(str, parsed_clauses)))
+    >>> print("\n".join(map(str, parsed_clauses)))
     cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
     cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
     cnf(test_axiom, axiom, test_constant = test_constant_2).
@@ -81,6 +85,12 @@ class TPTPParser:
     """
 
     def __init__(self):
+        """
+        Create a parser.
+
+        We create a Lark parser based on the grammar file from package's
+        resources.
+        """
         # pylint: disable=unspecified-encoding
         self.parser = Lark(
             files("tptp_lark_parser")
@@ -93,7 +103,7 @@ class TPTPParser:
         self, tptp_text: str, tptp_folder: str = "."
     ) -> Tuple[Clause, ...]:
         """
-        recursively parse a string containing a TPTP problem
+        Recursively parse a string containing a TPTP problem.
 
         :param tptp_text: a name of a problem (or axioms) file
         :param tptp_folder: a folder containing TPTP database
