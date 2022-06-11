@@ -43,7 +43,7 @@ How to use
 
 .. code:: python
 
-   from tptp_lark_parser.tptp_parser import TPTPParser
+   from tptp_lark_parser import TPTPParser
 
    tptp_parser = TPTPParser()
    parsed_text = tptp_parser.parse("cnf(test, axiom, ~ p(Y, X) | q(X, Y)).")

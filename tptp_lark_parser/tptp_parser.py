@@ -40,9 +40,13 @@ class TPTPParser:
 
     .. _tptp-parser:
 
+    >>> tptp_folder = (
+    ...     files("tptp_lark_parser")
+    ...     .joinpath(os.path.join("resources", "TPTP-mock"))
+    ... )
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function, EQUALITY_SYMBOL_ID)
-    >>> tptp_parser = TPTPParser()
+    >>> tptp_parser = TPTPParser(tptp_folder=tptp_folder, extendable=True)
     >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable(1), )), Variable(2)))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable(1),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
@@ -56,24 +60,24 @@ class TPTPParser:
     ...     ))
     ...     .read_text()
     ... )
-    >>> parsed_clauses = tptp_parser.parse(
-    ...     tptp_text,
-    ...     files("tptp_lark_parser")
-    ...     .joinpath(os.path.join("resources", "TPTP-mock"))
-    ... )
+    >>> parsed_clauses = tptp_parser.parse(tptp_text)
     >>> print("\n".join(map(str, parsed_clauses)))
-    cnf(this_is_a_test_case_1, hypothesis, p3(f1), inference(resolution, [], [one, two])).
-    cnf(this_is_a_test_case_2, hypothesis, ~p3(f1)).
-    cnf(test_axiom, axiom, f1 = f2).
-    cnf(test_axiom_2, axiom, ~f1 = f2).
+    cnf(this_is_a_test_case_1, hypothesis, p4(f4), inference(resolution, [], [one, two])).
+    cnf(this_is_a_test_case_2, hypothesis, ~p4(f4)).
+    cnf(test_axiom, axiom, f4 = f5).
+    cnf(test_axiom_2, axiom, ~f4 = f6).
     """
 
-    def __init__(self):
+    def __init__(self, tptp_folder: str = ".", extendable: bool = False):
         """
         Create a parser.
 
         We create a Lark parser based on the grammar file from package's
         resources.
+
+        :param tptp_folder: a folder containing TPTP database
+        :param extendable: when set to ``False``, the parser fails
+            when encounters new symbols
         """
         # pylint: disable=unspecified-encoding
         self.parser = Lark(
@@ -82,31 +86,30 @@ class TPTPParser:
             .read_text(),
             start="tptp_file",
         )
+        self.tptp_folder = tptp_folder
+        self.cnf_parser = CNFParser(extendable)
 
-    def parse(
-        self, tptp_text: str, tptp_folder: str = "."
-    ) -> Tuple[Clause, ...]:
+    def parse(self, tptp_text: str) -> Tuple[Clause, ...]:
         """
         Recursively parse a string containing a TPTP problem.
 
         :param tptp_text: a name of a problem (or axioms) file
-        :param tptp_folder: a folder containing TPTP database
         :returns: a list of clauses (including those of the axioms)
         """
         problem_tree = self.parser.parse(tptp_text)
         clauses = tuple(
-            CNFParser().transform(cnf_formula)
+            self.cnf_parser.transform(cnf_formula)
             for cnf_formula in problem_tree.find_data("cnf_annotated")
         )
         for include in problem_tree.find_data("include"):
             token = include.children[0]
             if isinstance(token, Token):
                 with open(
-                    os.path.join(tptp_folder, token.value.replace("'", "")),
+                    os.path.join(
+                        self.tptp_folder, token.value.replace("'", "")
+                    ),
                     "r",
                     encoding="utf-8",
                 ) as included_file:
-                    clauses = clauses + self.parse(
-                        included_file.read(), tptp_folder
-                    )
+                    clauses = clauses + self.parse(included_file.read())
         return clauses

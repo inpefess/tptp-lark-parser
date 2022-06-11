@@ -56,16 +56,26 @@ class CNFParser(Transformer):
     ...     .read_text(),
     ...     start="tptp_file"
     ... )
+    >>> lark_parsed_tree = lark_parser.parse('''
+    ...    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5)
+    ...    | ~ p2(f4(X1),f1(X2)) | $false | p3,
+    ...    inference(resolution, [], [this, that, third])).
+    ... ''')
     >>> cnf_parser = CNFParser()
     >>> cnf_parser.function_map
     {'$not#a&function^': 0}
     >>> cnf_parser.predicate_map
     {'$false': 0, '=': 1, '!=': 2}
-    >>> cnf_parser.transform(lark_parser.parse('''
-    ...    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5)
-    ...    | ~ p2(f4(X1),f1(X2)) | $false | p3,
-    ...    inference(resolution, [], [this, that, third])).
-    ... '''))
+    >>> cnf_parser.variable_map
+    {'X': 0}
+    >>> cnf_parser.transform(lark_parsed_tree)
+    Traceback (most recent call last):
+    ...
+    lark.exceptions.VisitError: Error trying to process rule "variable":
+    <BLANKLINE>
+    unknown symbol: X1
+    >>> cnf_parser.extendable = True
+    >>> cnf_parser.transform(lark_parsed_tree)
     cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5) | ~p3(f4(X1),f1(X2)) | $false() | p4(), inference(resolution, [], [this, that, third])).
     >>> cnf_parser.function_map
     {'$not#a&function^': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5}
@@ -73,8 +83,13 @@ class CNFParser(Transformer):
     {'$false': 0, '=': 1, '!=': 2, 'p2': 3, 'p3': 4}
     """
 
-    def __init__(self):
-        """Initialize functional and predicate symbols lists."""
+    def __init__(self, extendable: bool = False):
+        """
+        Initialize functional and predicate symbols lists.
+
+        :param extendable: when set to ``False``, the parser fails
+            when encounters new symbols
+        """
         super().__init__()
         self.function_map: Dict[str, int] = {"$not#a&function^": 0}
         self.predicate_map: Dict[str, int] = {
@@ -83,6 +98,7 @@ class CNFParser(Transformer):
             INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
         }
         self.variable_map: Dict[str, int] = {"X": 0}
+        self.extendable = extendable
 
     def __default_token__(self, token):
         """All the tokens we return as is."""
@@ -117,12 +133,17 @@ class CNFParser(Transformer):
         """
         if symbol_type == Variable:
             symbol_map = self.variable_map
-        elif symbol_type == Function:
-            symbol_map = self.function_map
         else:
-            symbol_map = self.predicate_map
+            symbol_map = (
+                self.function_map
+                if symbol_type == Function
+                else self.predicate_map
+            )
         if symbol not in symbol_map:
-            symbol_map.update({symbol: 1 + max(symbol_map.values())})
+            if self.extendable:
+                symbol_map.update({symbol: 1 + max(symbol_map.values())})
+            else:
+                raise ValueError(f"unknown symbol: {symbol}")
         return symbol_map[symbol]
 
     def fof_defined_plain_formula(self, children):
