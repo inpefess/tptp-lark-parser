@@ -19,7 +19,7 @@ TPTP Parser.
 """
 import os
 import sys
-from typing import Tuple
+from typing import Optional, Tuple
 
 from lark import Lark, Token
 
@@ -68,7 +68,12 @@ class TPTPParser:
     cnf(test_axiom_2, axiom, ~f4 = f6).
     """
 
-    def __init__(self, tptp_folder: str = ".", extendable: bool = False):
+    def __init__(
+        self,
+        tptp_folder: str = ".",
+        extendable: bool = False,
+        tokens_filename: Optional[str] = None,
+    ):
         """
         Create a parser.
 
@@ -78,6 +83,7 @@ class TPTPParser:
         :param tptp_folder: a folder containing TPTP database
         :param extendable: when set to ``False``, the parser fails
             when encounters new symbols
+        :param tokens_filename: a filename of known tokens storage
         """
         # pylint: disable=unspecified-encoding
         self.parser = Lark(
@@ -87,7 +93,7 @@ class TPTPParser:
             start="tptp_file",
         )
         self.tptp_folder = tptp_folder
-        self.cnf_parser = CNFParser(extendable)
+        self.cnf_parser = CNFParser(tokens_filename, extendable)
 
     def parse(self, tptp_text: str) -> Tuple[Clause, ...]:
         """

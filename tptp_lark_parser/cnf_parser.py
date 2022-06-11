@@ -18,7 +18,8 @@ CNF Parser.
 ===========
 """
 import dataclasses
-from typing import Dict, Union
+import json
+from typing import Dict, Optional, Tuple, Union
 
 from lark import Transformer
 
@@ -35,6 +36,18 @@ from tptp_lark_parser.grammar import (
     Predicate,
     Variable,
 )
+
+
+def _load_token_lists(
+    tokens_filename: str,
+) -> Tuple[Dict[str, int], Dict[str, int], Dict[str, int]]:
+    with open(tokens_filename, "r", encoding="utf-8") as tokens_file:
+        tokens = json.load(tokens_file)
+    return (
+        {v: k for k, v in enumerate(tokens["variables"])},
+        {v: k for k, v in enumerate(tokens["functions"])},
+        {v: k for k, v in enumerate(tokens["predicates"])},
+    )
 
 
 class CNFParser(Transformer):
@@ -83,21 +96,31 @@ class CNFParser(Transformer):
     {'$false': 0, '=': 1, '!=': 2, 'p2': 3, 'p3': 4}
     """
 
-    def __init__(self, extendable: bool = False):
+    def __init__(
+        self, tokens_filename: Optional[str] = None, extendable: bool = False
+    ):
         """
         Initialize functional and predicate symbols lists.
 
+        :param tokens_filename: a filename of known tokens storage
         :param extendable: when set to ``False``, the parser fails
             when encounters new symbols
         """
         super().__init__()
-        self.function_map: Dict[str, int] = {"$not#a&function^": 0}
-        self.predicate_map: Dict[str, int] = {
-            FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
-            EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
-            INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
-        }
-        self.variable_map: Dict[str, int] = {"X": 0}
+        if tokens_filename is None:
+            self.function_map: Dict[str, int] = {"$not#a&function^": 0}
+            self.predicate_map: Dict[str, int] = {
+                FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
+                EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
+                INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
+            }
+            self.variable_map: Dict[str, int] = {"X": 0}
+        else:
+            (
+                self.variable_map,
+                self.function_map,
+                self.predicate_map,
+            ) = _load_token_lists(tokens_filename)
         self.extendable = extendable
 
     def __default_token__(self, token):

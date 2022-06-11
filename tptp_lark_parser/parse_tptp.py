@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 from glob import glob
+from typing import Optional
 
 from tptp_lark_parser import TPTPParser
 
@@ -37,7 +38,13 @@ def _get_logger(level: int) -> logging.Logger:
     return logger
 
 
-def parse_tptp(tptp_folder: str, output_file: str, logging_level: int) -> None:
+def parse_tptp(
+    tptp_folder: str,
+    output_file: str,
+    logging_level: int,
+    tokens_filename: Optional[str],
+    learn_new_tokens: bool,
+) -> None:
     """
     Parse all TPTP CNF problems and write all symbols encountered.
 
@@ -53,12 +60,18 @@ def parse_tptp(tptp_folder: str, output_file: str, logging_level: int) -> None:
     >>> output_file = os.path.join(temp_folder, "test.json")
     >>> os.path.exists(output_file)
     False
-    >>> parse_tptp(tptp_folder, output_file, logging.FATAL)
-    >>> os.path.getsize(output_file)
-    156
+    >>> parse_tptp(tptp_folder, output_file, logging.FATAL, None, True)
+    >>> parse_tptp(tptp_folder, output_file, logging.FATAL, output_file, False)
+
+    :param tptp_folder: a folder with TPTP dump
+    :param output_file: where to save tokens found
+    :param logging_level: what to log
+    :param tokens_filename: a filename of known tokens storage
+    :param learn_new_tokens: if ``False``, then parsing fails when encounters
+        an unknown token
     """
     logger = _get_logger(logging_level)
-    tptp_parser = TPTPParser(tptp_folder, extendable=True)
+    tptp_parser = TPTPParser(tptp_folder, learn_new_tokens, tokens_filename)
     cnf_problems = sorted(
         glob(os.path.join(tptp_folder, "Problems", "*", "*-*.p"))
     )
@@ -80,4 +93,6 @@ if __name__ == "__main__":
         os.path.join(os.environ["WORK"], "data", "TPTP-v8.0.0"),
         "tptp_tokens.json",
         logging.INFO,
+        None,
+        True,
     )  # pragma: no cover
