@@ -11,13 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# noqa D205
 """
-TPTP Parser
-===========
+TPTP Parser.
+============
 """
 import os
 import sys
-from typing import Tuple
+from typing import Optional, Tuple
 
 from lark import Lark, Token
 
@@ -33,34 +35,26 @@ else:  # pragma: no cover
 
 # pylint: disable=too-few-public-methods
 class TPTPParser:
-    """
+    r"""
+    TPTP parser.
+
     .. _tptp-parser:
 
+    >>> tptp_folder = (
+    ...     files("tptp_lark_parser")
+    ...     .joinpath(os.path.join("resources", "TPTP-mock"))
+    ... )
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
-    ...     Function)
-    >>> tptp_parser = TPTPParser()
-    >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))), Literal(False, Predicate("=", (Function("f", ()), Function("g", ())))), Literal(False, Predicate("p", (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
+    ...     Function, EQUALITY_SYMBOL_ID)
+    >>> tptp_parser = TPTPParser(
+    ...     tptp_folder=tptp_folder, extendable=True, tokens_filename=None
+    ... )
+    >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable(1), )), Variable(2)))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable(1),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
-    >>> print(clause.to_java())
-    boolean x...(Object X, Object Y) {
-        return !(this_is_a_test_case(X) == Y) || (f() == g()) || p(X);
-    }
-    >>> print(clause.to_python())
-    def x...(X, Y):
-        return ~(this_is_a_test_case(X) == Y) | (f() == g()) | p(X)
-    <BLANKLINE>
     >>> empty_clause = Clause(literals=())
     >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
     True
-    >>> print(empty_clause.to_java())
-    boolean x...() {
-        return false;
-    }
-    >>> print(empty_clause.to_python())
-    def x...():
-        return false
-    <BLANKLINE>
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join(
@@ -68,19 +62,37 @@ class TPTPParser:
     ...     ))
     ...     .read_text()
     ... )
-    >>> parsed_clauses = tptp_parser.parse(
-    ...     tptp_text,
-    ...     files("tptp_lark_parser")
-    ...     .joinpath(os.path.join("resources", "TPTP-mock"))
-    ... )
-    >>> print("\\n".join(map(str, parsed_clauses)))
-    cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
-    cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
-    cnf(test_axiom, axiom, test_constant = test_constant_2).
-    cnf(test_axiom_2, axiom, ~test_constant = 0).
+    >>> parsed_clauses = tptp_parser.parse(tptp_text)
+    >>> print("\n".join(map(str, parsed_clauses)))
+    cnf(this_is_a_test_case_1, hypothesis, p4(f4), inference(resolution, [], [one, two])).
+    cnf(this_is_a_test_case_2, hypothesis, ~p4(f4)).
+    cnf(test_axiom, axiom, f4 = f5).
+    cnf(test_axiom_2, axiom, ~f4 = f6).
     """
 
-    def __init__(self):
+    _tokens_from_resources = str(
+        files("tptp_lark_parser").joinpath(
+            os.path.join("resources", "tptp_tokens.json")
+        )
+    )
+
+    def __init__(
+        self,
+        tptp_folder: str = ".",
+        extendable: bool = False,
+        tokens_filename: Optional[str] = _tokens_from_resources,
+    ):
+        """
+        Create a parser.
+
+        We create a Lark parser based on the grammar file from package's
+        resources.
+
+        :param tptp_folder: a folder containing TPTP database
+        :param extendable: when set to ``False``, the parser fails
+            when encounters new symbols
+        :param tokens_filename: a filename of known tokens storage
+        """
         # pylint: disable=unspecified-encoding
         self.parser = Lark(
             files("tptp_lark_parser")
@@ -88,31 +100,30 @@ class TPTPParser:
             .read_text(),
             start="tptp_file",
         )
+        self.tptp_folder = tptp_folder
+        self.cnf_parser = CNFParser(tokens_filename, extendable)
 
-    def parse(
-        self, tptp_text: str, tptp_folder: str = "."
-    ) -> Tuple[Clause, ...]:
+    def parse(self, tptp_text: str) -> Tuple[Clause, ...]:
         """
-        recursively parse a string containing a TPTP problem
+        Recursively parse a string containing a TPTP problem.
 
         :param tptp_text: a name of a problem (or axioms) file
-        :param tptp_folder: a folder containing TPTP database
         :returns: a list of clauses (including those of the axioms)
         """
         problem_tree = self.parser.parse(tptp_text)
         clauses = tuple(
-            CNFParser().transform(cnf_formula)
+            self.cnf_parser.transform(cnf_formula)
             for cnf_formula in problem_tree.find_data("cnf_annotated")
         )
         for include in problem_tree.find_data("include"):
             token = include.children[0]
             if isinstance(token, Token):
                 with open(
-                    os.path.join(tptp_folder, token.value.replace("'", "")),
+                    os.path.join(
+                        self.tptp_folder, token.value.replace("'", "")
+                    ),
                     "r",
                     encoding="utf-8",
                 ) as included_file:
-                    clauses = clauses + self.parse(
-                        included_file.read(), tptp_folder
-                    )
+                    clauses = clauses + self.parse(included_file.read())
         return clauses

@@ -38,6 +38,7 @@ types-dataclasses = "*"
 sphinx-rtd-theme = "*"
 sphinx-autodoc-typehints = "*"
 flake8 = "*"
+pydocstyle = "*"
 
 [tool.black]
 line-length=79
@@ -54,6 +55,7 @@ build-backend = "poetry.core.masonry.api"
 minversion = "6.0"
 addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=100 --junit-xml test-results/tptp-lark-parser.xml"
 testpaths = ["tptp_lark_parser"]
+doctest_optionflags = "NORMALIZE_WHITESPACE"
 
 [tool.coverage.report]
 exclude_lines = [

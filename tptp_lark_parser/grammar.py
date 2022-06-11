@@ -11,46 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# noqa D205
 """
-Grammar
+Grammar.
 ********
 """
 from dataclasses import dataclass, field
-from enum import Enum
-from functools import partial
-from itertools import chain
-from operator import itemgetter
 from typing import Optional, Tuple, Union
 from uuid import uuid1
 
-
-class OutputLanguage(Enum):
-    """one can transform clauses to programming language snippets"""
-
-    PYTHON = 0
-    JAVA = 1
+FALSEHOOD_SYMBOL = "$false"
+FALSEHOOD_SYMBOL_ID = 0
+EQUALITY_SYMBOL = "="
+EQUALITY_SYMBOL_ID = 1
+INEQUALITY_SYMBOL = "!="
+INEQUALITY_SYMBOL_ID = 2
 
 
 @dataclass(frozen=True)
 class Variable:
     """
-    .. _variable:
+    A variable is characterised only by its name.
 
-    a variable is characterised only by its name
+    .. _variable:
     """
 
-    name: str
+    name: int
 
 
 @dataclass(frozen=True)
 class Function:
     """
-    .. _Function:
+    A functional symbol might be applied to a list of arguments.
 
-    a functional symbol might be applied to a list of arguments
+    .. _Function:
     """
 
-    name: str
+    name: int
     arguments: Tuple[Union[Variable, "Function"], ...]
 
 
@@ -65,12 +63,12 @@ Term is either a :ref:`Variable <Variable>` or a :ref:`Function <Function>`
 @dataclass(frozen=True)
 class Predicate:
     """
-    .. _Predicate:
+    A predicate symbol might be applied to a list of arguments.
 
-    a predicate symbol might be applied to a list of arguments
+    .. _Predicate:
     """
 
-    name: str
+    name: int
     arguments: Tuple[Term, ...]
 
 
@@ -85,9 +83,9 @@ Proposition is either a :ref:`Predicate <Predicate>` or a :ref:`Term <Term>`
 @dataclass(frozen=True)
 class Literal:
     """
-    .. _Literal:
+    Literal is an atom which can be negated or not.
 
-    literal is an atom which can be negated or not
+    .. _Literal:
     """
 
     negated: bool
@@ -100,65 +98,31 @@ def _term_to_tptp(term: Term) -> str:
             _term_to_tptp(argument) for argument in term.arguments
         )
         if arguments != tuple():
-            return f"{term.name}({','.join(arguments)})"
-    return term.name
-
-
-def _term_to_java(term: Term) -> Tuple[str, Tuple[str, ...]]:
-    if isinstance(term, Function):
-        arguments = tuple(
-            _term_to_java(argument) for argument in term.arguments
-        )
-        return (
-            f"{term.name}({','.join(map(itemgetter(0), arguments))})",
-            tuple(chain(*map(itemgetter(1), arguments))),
-        )
-    return term.name, (term.name,)
+            return f"f{term.name}({','.join(arguments)})"
+        return f"f{term.name}"
+    return f"X{term.name}"
 
 
 def _literal_to_tptp(literal: Literal) -> str:
     res = "~" if literal.negated else ""
-    if literal.atom.name != "=":
-        res += (
-            literal.atom.name
-            + "("
-            + ", ".join(
-                tuple(_term_to_tptp(term) for term in literal.atom.arguments)
-            )
-            + ")"
-        )
+    arguments = tuple(_term_to_tptp(term) for term in literal.atom.arguments)
+    if literal.atom.name != EQUALITY_SYMBOL_ID:
+        if literal.atom.name != FALSEHOOD_SYMBOL_ID:
+            res += f"p{literal.atom.name}({','.join(arguments)})"
+        else:
+            res += f"{FALSEHOOD_SYMBOL}()"
     else:
-        res += (
-            _term_to_tptp(literal.atom.arguments[0])
-            + " = "
-            + _term_to_tptp(literal.atom.arguments[1])
-        )
+        res += f"{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
     return res
-
-
-def _literal_to_code(
-    literal: Literal, language: OutputLanguage
-) -> Tuple[str, Tuple[str, ...]]:
-    if literal.negated:
-        res = "!" if language == OutputLanguage.JAVA else "~"
-    else:
-        res = ""
-    arguments = tuple(_term_to_java(term) for term in literal.atom.arguments)
-    if literal.atom.name != "=":
-        res += (
-            f"{literal.atom.name}({','.join(map(itemgetter(0), arguments))})"
-        )
-    else:
-        res += f"({arguments[0][0]} == {arguments[1][0]})"
-    return res, tuple(chain(*map(itemgetter(1), arguments)))
 
 
 @dataclass(frozen=True)
 class Clause:
     """
+    Clause is a disjunction of literals.
+
     .. _Clause:
 
-    clause is a disjunction of literals
 
     :param literals: a list of literals, forming the clause
     :param label: comes from the problem file or starts with ``inferred_`` if
@@ -185,13 +149,14 @@ class Clause:
     birth_step: Optional[int] = None
 
     def __repr__(self):
+        """Print a logical forumla back to TPTP language."""
         res = f"cnf({self.label}, {self.role}, "
         for literal in self.literals:
             res += _literal_to_tptp(literal) + " | "
         if res[-2:] == "| ":
             res = res[:-3]
         if not self.literals:
-            res += "$false"
+            res += FALSEHOOD_SYMBOL
         if (
             self.inference_parents is not None
             and self.inference_rule is not None
@@ -202,46 +167,3 @@ class Clause:
                 + "])"
             )
         return res + ")."
-
-    def to_java(self) -> str:
-        """
-        see :ref:`TPTPParser <tptp-parser>` for the usage examples
-
-        :returns: a Java code snippet representing the clause syntax only
-        """
-        literals = tuple(
-            map(
-                partial(_literal_to_code, language=OutputLanguage.JAVA),
-                self.literals,
-            )
-        )
-        signature = ", ".join(
-            map(
-                lambda variable: f"Object {variable}",
-                sorted(tuple(set(chain(*map(itemgetter(1), literals))))),
-            )
-        )
-        body = " || ".join(map(itemgetter(0), literals))
-        return f"""boolean {self.label}({signature}) {{
-    return {'false' if body == '' else body};
-}}"""
-
-    def to_python(self) -> str:
-        """
-        see :ref:`TPTPParser <tptp-parser>` for the usage examples
-
-        :returns: a Python code snippet representing the clause syntax only
-        """
-        literals = tuple(
-            map(
-                partial(_literal_to_code, language=OutputLanguage.PYTHON),
-                self.literals,
-            )
-        )
-        signature = ", ".join(
-            sorted(tuple(set(chain(*map(itemgetter(1), literals)))))
-        )
-        body = " | ".join(map(itemgetter(0), literals))
-        return f"""def {self.label}({signature}):
-    return {'false' if body == '' else body}
-"""
