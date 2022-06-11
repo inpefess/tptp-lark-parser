@@ -73,7 +73,19 @@ def parse_tptp(
     logger = _get_logger(logging_level)
     tptp_parser = TPTPParser(tptp_folder, learn_new_tokens, tokens_filename)
     cnf_problems = sorted(
-        glob(os.path.join(tptp_folder, "Problems", "*", "*-*.p"))
+        [
+            problem
+            for problem in glob(
+                os.path.join(tptp_folder, "Problems", "*", "*-*.p")
+            )
+            if "CSR" not in problem
+            and "HWV" not in problem
+            and "KRS" not in problem
+            and "PLA" not in problem
+            and "SWV" not in problem
+            and "SYN" not in problem
+            and "SYO" not in problem
+        ]
     )
     for problem in cnf_problems:
         _read_and_parse_file(tptp_parser, problem)
