@@ -36,7 +36,7 @@ else:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 class TPTPParser:
     r"""
-    a TPTP parser.
+    TPTP parser.
 
     .. _tptp-parser:
 
@@ -46,7 +46,9 @@ class TPTPParser:
     ... )
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function, EQUALITY_SYMBOL_ID)
-    >>> tptp_parser = TPTPParser(tptp_folder=tptp_folder, extendable=True)
+    >>> tptp_parser = TPTPParser(
+    ...     tptp_folder=tptp_folder, extendable=True, tokens_filename=None
+    ... )
     >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable(1), )), Variable(2)))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable(1),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
@@ -68,11 +70,17 @@ class TPTPParser:
     cnf(test_axiom_2, axiom, ~f4 = f6).
     """
 
+    _tokens_from_resources = str(
+        files("tptp_lark_parser").joinpath(
+            os.path.join("resources", "tptp_tokens.json")
+        )
+    )
+
     def __init__(
         self,
         tptp_folder: str = ".",
         extendable: bool = False,
-        tokens_filename: Optional[str] = None,
+        tokens_filename: Optional[str] = _tokens_from_resources,
     ):
         """
         Create a parser.
