@@ -43,7 +43,7 @@ class TPTPParser:
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function, EQUALITY_SYMBOL_ID)
     >>> tptp_parser = TPTPParser()
-    >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable("X"), )), Variable("Y")))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
+    >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable(1), )), Variable(2)))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable(1),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
     >>> empty_clause = Clause(literals=())

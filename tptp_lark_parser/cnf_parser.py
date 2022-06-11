@@ -18,7 +18,7 @@ CNF Parser.
 ===========
 """
 import dataclasses
-from typing import Dict
+from typing import Dict, Union
 
 from lark import Transformer
 
@@ -62,11 +62,11 @@ class CNFParser(Transformer):
     >>> cnf_parser.predicate_map
     {'$false': 0, '=': 1, '!=': 2}
     >>> cnf_parser.transform(lark_parser.parse('''
-    ...    cnf(this_is_a_test_case, axiom, f4(X,f1(Y),f3(Z,f2)) = f4(X,Y,f5)
-    ...    | ~ p2(f4(X),f1(Y)) | $false | p3,
+    ...    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5)
+    ...    | ~ p2(f4(X1),f1(X2)) | $false | p3,
     ...    inference(resolution, [], [this, that, third])).
     ... '''))
-    cnf(this_is_a_test_case, axiom, f4(X,f1(Y),f3(Z,f2)) = f4(X,Y,f5) | ~p3(f4(X),f1(Y)) | $false() | p4(), inference(resolution, [], [this, that, third])).
+    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5) | ~p3(f4(X1),f1(X2)) | $false() | p4(), inference(resolution, [], [this, that, third])).
     >>> cnf_parser.function_map
     {'$not#a&function^': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5}
     >>> cnf_parser.predicate_map
@@ -76,12 +76,13 @@ class CNFParser(Transformer):
     def __init__(self):
         """Initialize functional and predicate symbols lists."""
         super().__init__()
-        self.function_map: Dict[str:int] = {"$not#a&function^": 0}
-        self.predicate_map: Dict[str:int] = {
+        self.function_map: Dict[str, int] = {"$not#a&function^": 0}
+        self.predicate_map: Dict[str, int] = {
             FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
             EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
             INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
         }
+        self.variable_map: Dict[str, int] = {"X": 0}
 
     def __default_token__(self, token):
         """All the tokens we return as is."""
@@ -100,27 +101,29 @@ class CNFParser(Transformer):
     def _function(self, children):
         """Functional symbol with arguments."""
         function_name = children[0]
-        if function_name not in self.function_map:
-            self.function_map.update(
-                {function_name: 1 + max(self.function_map.values())}
-            )
-        function_id = self.function_map[function_name]
+        function_id = self._get_symbol_id(function_name, Function)
         if len(children) > 1:
             return Function(function_id, tuple(children[1]))
         return Function(function_id, ())
 
-    def _get_predicate_id(self, predicate_name: str) -> int:
+    def _get_symbol_id(
+        self, symbol: str, symbol_type: Union[Variable, Function, Predicate]
+    ) -> int:
         """
-        Get integer ID for a predicate symbol.
+        Get an integer ID for a symbol.
 
-        :param predicate_name: a predicate symbol
+        :param symbol: a predicate or functional symbol, or a variable name
         :returns: an integer ID
         """
-        if predicate_name not in self.predicate_map:
-            self.predicate_map.update(
-                {predicate_name: 1 + max(self.predicate_map.values())}
-            )
-        return self.predicate_map[predicate_name]
+        if symbol_type == Variable:
+            symbol_map = self.variable_map
+        elif symbol_type == Function:
+            symbol_map = self.function_map
+        else:
+            symbol_map = self.predicate_map
+        if symbol not in symbol_map:
+            symbol_map.update({symbol: 1 + max(symbol_map.values())})
+        return symbol_map[symbol]
 
     def fof_defined_plain_formula(self, children):
         """
@@ -146,14 +149,13 @@ class CNFParser(Transformer):
         """
         return self._function(children)
 
-    @staticmethod
-    def variable(children):
+    def variable(self, children):
         """
         Variable (supposed to be universally quantified).
 
         <variable>             ::= <upper_word>
         """
-        return Variable(children[0])
+        return Variable(self._get_symbol_id(children[0], Variable))
 
     @staticmethod
     def fof_arguments(children):
@@ -192,7 +194,7 @@ class CNFParser(Transformer):
 
     def _predicate(self, children):
         """Predicates are atomic formulae."""
-        predicate_id = self._get_predicate_id(children[0])
+        predicate_id = self._get_symbol_id(children[0], Predicate)
         if len(children) > 1:
             return Predicate(predicate_id, tuple(children[1]))
         return Predicate(predicate_id, ())
@@ -211,7 +213,7 @@ class CNFParser(Transformer):
 
         <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
         """
-        predicate_id = self._get_predicate_id(children[1])
+        predicate_id = self._get_symbol_id(children[1], Predicate)
         return Predicate(predicate_id, (children[0], children[2]))
 
     def fof_infix_unary(self, children):
@@ -220,7 +222,7 @@ class CNFParser(Transformer):
 
         <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
         """
-        predicate_id = self._get_predicate_id(children[1])
+        predicate_id = self._get_symbol_id(children[1], Predicate)
         return Predicate(predicate_id, (children[0], children[2]))
 
     @staticmethod

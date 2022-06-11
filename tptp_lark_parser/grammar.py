@@ -37,7 +37,7 @@ class Variable:
     .. _variable:
     """
 
-    name: str
+    name: int
 
 
 @dataclass(frozen=True)
@@ -100,7 +100,7 @@ def _term_to_tptp(term: Term) -> str:
         if arguments != tuple():
             return f"f{term.name}({','.join(arguments)})"
         return f"f{term.name}"
-    return term.name
+    return f"X{term.name}"
 
 
 def _literal_to_tptp(literal: Literal) -> str:
