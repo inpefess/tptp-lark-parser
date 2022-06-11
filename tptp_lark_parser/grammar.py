@@ -21,6 +21,13 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, Union
 from uuid import uuid1
 
+FALSEHOOD_SYMBOL = "$false"
+FALSEHOOD_SYMBOL_ID = 0
+EQUALITY_SYMBOL = "="
+EQUALITY_SYMBOL_ID = 1
+INEQUALITY_SYMBOL = "!="
+INEQUALITY_SYMBOL_ID = 2
+
 
 @dataclass(frozen=True)
 class Variable:
@@ -41,7 +48,7 @@ class Function:
     .. _Function:
     """
 
-    name: str
+    name: int
     arguments: Tuple[Union[Variable, "Function"], ...]
 
 
@@ -61,7 +68,7 @@ class Predicate:
     .. _Predicate:
     """
 
-    name: str
+    name: int
     arguments: Tuple[Term, ...]
 
 
@@ -91,27 +98,21 @@ def _term_to_tptp(term: Term) -> str:
             _term_to_tptp(argument) for argument in term.arguments
         )
         if arguments != tuple():
-            return f"{term.name}({','.join(arguments)})"
+            return f"f{term.name}({','.join(arguments)})"
+        return f"f{term.name}"
     return term.name
 
 
 def _literal_to_tptp(literal: Literal) -> str:
     res = "~" if literal.negated else ""
-    if literal.atom.name != "=":
-        res += (
-            literal.atom.name
-            + "("
-            + ", ".join(
-                tuple(_term_to_tptp(term) for term in literal.atom.arguments)
-            )
-            + ")"
-        )
+    arguments = tuple(_term_to_tptp(term) for term in literal.atom.arguments)
+    if literal.atom.name != EQUALITY_SYMBOL_ID:
+        if literal.atom.name != FALSEHOOD_SYMBOL_ID:
+            res += f"p{literal.atom.name}({','.join(arguments)})"
+        else:
+            res += f"{FALSEHOOD_SYMBOL}()"
     else:
-        res += (
-            _term_to_tptp(literal.atom.arguments[0])
-            + " = "
-            + _term_to_tptp(literal.atom.arguments[1])
-        )
+        res += f"{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
     return res
 
 
@@ -155,7 +156,7 @@ class Clause:
         if res[-2:] == "| ":
             res = res[:-3]
         if not self.literals:
-            res += "$false"
+            res += FALSEHOOD_SYMBOL
         if (
             self.inference_parents is not None
             and self.inference_rule is not None

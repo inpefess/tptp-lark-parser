@@ -41,9 +41,9 @@ class TPTPParser:
     .. _tptp-parser:
 
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
-    ...     Function)
+    ...     Function, EQUALITY_SYMBOL_ID)
     >>> tptp_parser = TPTPParser()
-    >>> clause = Clause(literals=(Literal(True, Predicate("=", (Function("this_is_a_test_case", (Variable("X"), )), Variable("Y")))), Literal(False, Predicate("=", (Function("f", ()), Function("g", ())))), Literal(False, Predicate("p", (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
+    >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable("X"), )), Variable("Y")))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable("X"),)))), inference_rule="resolution", inference_parents=("one", "two"))
     >>> tptp_parser.parse(str(clause))[0] == clause
     True
     >>> empty_clause = Clause(literals=())
@@ -62,10 +62,10 @@ class TPTPParser:
     ...     .joinpath(os.path.join("resources", "TPTP-mock"))
     ... )
     >>> print("\n".join(map(str, parsed_clauses)))
-    cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
-    cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
-    cnf(test_axiom, axiom, test_constant = test_constant_2).
-    cnf(test_axiom_2, axiom, ~test_constant = 0).
+    cnf(this_is_a_test_case_1, hypothesis, p3(f1), inference(resolution, [], [one, two])).
+    cnf(this_is_a_test_case_2, hypothesis, ~p3(f1)).
+    cnf(test_axiom, axiom, f1 = f2).
+    cnf(test_axiom_2, axiom, ~f1 = f2).
     """
 
     def __init__(self):

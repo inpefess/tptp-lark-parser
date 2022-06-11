@@ -18,10 +18,17 @@ CNF Parser.
 ===========
 """
 import dataclasses
+from typing import Dict
 
 from lark import Transformer
 
 from tptp_lark_parser.grammar import (
+    EQUALITY_SYMBOL,
+    EQUALITY_SYMBOL_ID,
+    FALSEHOOD_SYMBOL,
+    FALSEHOOD_SYMBOL_ID,
+    INEQUALITY_SYMBOL,
+    INEQUALITY_SYMBOL_ID,
     Clause,
     Function,
     Literal,
@@ -43,19 +50,38 @@ class CNFParser(Transformer):
     ... else:
     ...     from importlib_resources import files
     >>> from lark import Lark
-    >>> parser = Lark(
+    >>> lark_parser = Lark(
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join("resources", "TPTP.lark"))
     ...     .read_text(),
     ...     start="tptp_file"
     ... )
-    >>> CNFParser().transform(parser.parse('''
-    ...    cnf(test, axiom, f(X, g(Y), h(Z, c1)) = f(X, Y, c2)
-    ...    | ~ better(f(X), g(Y)) | $false | this_is_a_test_case,
+    >>> cnf_parser = CNFParser()
+    >>> cnf_parser.function_map
+    {'$not#a&function^': 0}
+    >>> cnf_parser.predicate_map
+    {'$false': 0, '=': 1, '!=': 2}
+    >>> cnf_parser.transform(lark_parser.parse('''
+    ...    cnf(this_is_a_test_case, axiom, f4(X,f1(Y),f3(Z,f2)) = f4(X,Y,f5)
+    ...    | ~ p2(f4(X),f1(Y)) | $false | p3,
     ...    inference(resolution, [], [this, that, third])).
     ... '''))
-    cnf(test, axiom, f(X,g(Y),h(Z,c1)) = f(X,Y,c2) | ~better(f(X), g(Y)) | $false() | this_is_a_test_case(), inference(resolution, [], [this, that, third])).
+    cnf(this_is_a_test_case, axiom, f4(X,f1(Y),f3(Z,f2)) = f4(X,Y,f5) | ~p3(f4(X),f1(Y)) | $false() | p4(), inference(resolution, [], [this, that, third])).
+    >>> cnf_parser.function_map
+    {'$not#a&function^': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5}
+    >>> cnf_parser.predicate_map
+    {'$false': 0, '=': 1, '!=': 2, 'p2': 3, 'p3': 4}
     """
+
+    def __init__(self):
+        """Initialize functional and predicate symbols lists."""
+        super().__init__()
+        self.function_map: Dict[str:int] = {"$not#a&function^": 0}
+        self.predicate_map: Dict[str:int] = {
+            FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
+            EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
+            INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
+        }
 
     def __default_token__(self, token):
         """All the tokens we return as is."""
@@ -71,12 +97,30 @@ class CNFParser(Transformer):
             return children[0]
         return children
 
-    @staticmethod
-    def _function(children):
+    def _function(self, children):
         """Functional symbol with arguments."""
+        function_name = children[0]
+        if function_name not in self.function_map:
+            self.function_map.update(
+                {function_name: 1 + max(self.function_map.values())}
+            )
+        function_id = self.function_map[function_name]
         if len(children) > 1:
-            return Function(children[0], tuple(children[1]))
-        return Function(children[0], ())
+            return Function(function_id, tuple(children[1]))
+        return Function(function_id, ())
+
+    def _get_predicate_id(self, predicate_name: str) -> int:
+        """
+        Get integer ID for a predicate symbol.
+
+        :param predicate_name: a predicate symbol
+        :returns: an integer ID
+        """
+        if predicate_name not in self.predicate_map:
+            self.predicate_map.update(
+                {predicate_name: 1 + max(self.predicate_map.values())}
+            )
+        return self.predicate_map[predicate_name]
 
     def fof_defined_plain_formula(self, children):
         """
@@ -136,19 +180,22 @@ class CNFParser(Transformer):
         if children[0] == "~":
             return Literal(True, children[1])
         if isinstance(children[0], Predicate):
-            if children[0].name == "!=":
+            if children[0].name == INEQUALITY_SYMBOL_ID:
                 return Literal(
                     negated=True,
-                    atom=Predicate(name="=", arguments=children[0].arguments),
+                    atom=Predicate(
+                        name=EQUALITY_SYMBOL_ID,
+                        arguments=children[0].arguments,
+                    ),
                 )
         return Literal(False, children[0])
 
-    @staticmethod
-    def _predicate(children):
+    def _predicate(self, children):
         """Predicates are atomic formulae."""
+        predicate_id = self._get_predicate_id(children[0])
         if len(children) > 1:
-            return Predicate(children[0], tuple(children[1]))
-        return Predicate(children[0], ())
+            return Predicate(predicate_id, tuple(children[1]))
+        return Predicate(predicate_id, ())
 
     def fof_plain_atomic_formula(self, children):
         """
@@ -158,23 +205,23 @@ class CNFParser(Transformer):
         """
         return self._predicate(children)
 
-    @staticmethod
-    def fof_defined_infix_formula(children):
+    def fof_defined_infix_formula(self, children):
         """
         Translte predicates in the infix form to the prefix.
 
         <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
         """
-        return Predicate(children[1], (children[0], children[2]))
+        predicate_id = self._get_predicate_id(children[1])
+        return Predicate(predicate_id, (children[0], children[2]))
 
-    @staticmethod
-    def fof_infix_unary(children):
+    def fof_infix_unary(self, children):
         """
         Translate predicates in the infix form to the prefix.
 
         <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
         """
-        return Predicate(children[1], (children[0], children[2]))
+        predicate_id = self._get_predicate_id(children[1])
+        return Predicate(predicate_id, (children[0], children[2]))
 
     @staticmethod
     def disjunction(children):
@@ -184,7 +231,10 @@ class CNFParser(Transformer):
         <disjunction>          ::= <literal> | <disjunction> <vline> <literal>
         """
         if len(children) == 1:
-            if children[0].atom.name == "$false" and not children[0].negated:
+            if (
+                children[0].atom.name == FALSEHOOD_SYMBOL_ID
+                and not children[0].negated
+            ):
                 return Clause(tuple())
             return Clause(tuple(children))
         literals = ()
