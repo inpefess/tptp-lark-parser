@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
-|Binder|\ |PyPI version|\ |CircleCI|\ |Documentation Status|\ |codecov|
+|Binder|\ |PyPI version|\ |CircleCI|\ |AppveyorCI|\ |Documentation Status|\ |codecov|
 
 tptp-lark-parser
 ================
@@ -98,3 +98,5 @@ More documentation can be found
    :target: https://codecov.io/gh/inpefess/tptp-lark-parser
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
    :target: https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=example.ipynb
+.. |AppveyorCI| image:: https://ci.appveyor.com/api/projects/status/7n0g3a3ag5hjtfi0?svg=true
+   :target: https://ci.appveyor.com/project/inpefess/tptp-lark-parser
