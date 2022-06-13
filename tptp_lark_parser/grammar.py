@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# noqa D205
+# noqa D205, D400
 """
-Grammar.
+Grammar
 ********
 """
 from dataclasses import dataclass, field
@@ -92,30 +92,6 @@ class Literal:
     atom: Predicate
 
 
-def _term_to_tptp(term: Term) -> str:
-    if isinstance(term, Function):
-        arguments = tuple(
-            _term_to_tptp(argument) for argument in term.arguments
-        )
-        if arguments != tuple():
-            return f"f{term.name}({','.join(arguments)})"
-        return f"f{term.name}"
-    return f"X{term.name}"
-
-
-def _literal_to_tptp(literal: Literal) -> str:
-    res = "~" if literal.negated else ""
-    arguments = tuple(_term_to_tptp(term) for term in literal.atom.arguments)
-    if literal.atom.name != EQUALITY_SYMBOL_ID:
-        if literal.atom.name != FALSEHOOD_SYMBOL_ID:
-            res += f"p{literal.atom.name}({','.join(arguments)})"
-        else:
-            res += f"{FALSEHOOD_SYMBOL}()"
-    else:
-        res += f"{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
-    return res
-
-
 @dataclass(frozen=True)
 class Clause:
     """
@@ -147,23 +123,3 @@ class Clause:
     inference_rule: Optional[str] = None
     processed: Optional[bool] = None
     birth_step: Optional[int] = None
-
-    def __repr__(self):
-        """Print a logical forumla back to TPTP language."""
-        res = f"cnf({self.label}, {self.role}, "
-        for literal in self.literals:
-            res += _literal_to_tptp(literal) + " | "
-        if res[-2:] == "| ":
-            res = res[:-3]
-        if not self.literals:
-            res += FALSEHOOD_SYMBOL
-        if (
-            self.inference_parents is not None
-            and self.inference_rule is not None
-        ):
-            res += (
-                f", inference({self.inference_rule}, [], ["
-                + ", ".join(self.inference_parents)
-                + "])"
-            )
-        return res + ")."

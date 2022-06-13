@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# noqa D205
+# noqa D205, D400
 """
-CNF Parser.
+CNF Parser
 ===========
 """
 import dataclasses
 import json
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Union
 
 from lark import Transformer
 
@@ -34,20 +34,21 @@ from tptp_lark_parser.grammar import (
     Function,
     Literal,
     Predicate,
+    Term,
     Variable,
 )
 
 
 def _load_token_lists(
     tokens_filename: str,
-) -> Tuple[Dict[str, int], Dict[str, int], Dict[str, int]]:
+) -> Dict[str, Dict[str, int]]:
     with open(tokens_filename, "r", encoding="utf-8") as tokens_file:
         tokens = json.load(tokens_file)
-    return (
-        {v: k for k, v in enumerate(tokens["variables"])},
-        {v: k for k, v in enumerate(tokens["functions"])},
-        {v: k for k, v in enumerate(tokens["predicates"])},
-    )
+    return {
+        "variables": {v: k for k, v in enumerate(tokens["variables"])},
+        "functions": {v: k for k, v in enumerate(tokens["functions"])},
+        "predicates": {v: k for k, v in enumerate(tokens["predicates"])},
+    }
 
 
 class CNFParser(Transformer):
@@ -70,30 +71,26 @@ class CNFParser(Transformer):
     ...     start="tptp_file"
     ... )
     >>> lark_parsed_tree = lark_parser.parse('''
-    ...    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5)
-    ...    | ~ p2(f4(X1),f1(X2)) | $false | p3,
+    ...    cnf(test, axiom, f(X, g(Y), h(Z, c1)) = f(X, Y, c2)
+    ...    | ~ better(f(X), g(Y)) | $false | this_is_a_test_case,
     ...    inference(resolution, [], [this, that, third])).
     ... ''')
     >>> cnf_parser = CNFParser()
-    >>> cnf_parser.function_map
+    >>> cnf_parser.token_map["functions"]
     {'$not#a&function^': 0}
-    >>> cnf_parser.predicate_map
-    {'$false': 0, '=': 1, '!=': 2}
-    >>> cnf_parser.variable_map
-    {'X': 0}
     >>> cnf_parser.transform(lark_parsed_tree)
     Traceback (most recent call last):
     ...
     lark.exceptions.VisitError: Error trying to process rule "variable":
     <BLANKLINE>
-    unknown symbol: X1
+    unknown symbol: Y
     >>> cnf_parser.extendable = True
-    >>> cnf_parser.transform(lark_parsed_tree)
-    cnf(this_is_a_test_case, axiom, f4(X1,f1(X2),f3(X3,f2)) = f4(X1,X2,f5) | ~p3(f4(X1),f1(X2)) | $false() | p4(), inference(resolution, [], [this, that, third])).
-    >>> cnf_parser.function_map
-    {'$not#a&function^': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5}
-    >>> cnf_parser.predicate_map
-    {'$false': 0, '=': 1, '!=': 2, 'p2': 3, 'p3': 4}
+    >>> clause = cnf_parser.transform(lark_parsed_tree)
+    >>> cnf_parser.invert_token_maps()
+    >>> print(cnf_parser.pretty_print(clause))
+    cnf(test, axiom, f(X,g(Y),h(Z,c1)) = f(X,Y,c2) | ~better(f(X), g(Y)) | $false() | this_is_a_test_case(), inference(resolution, [], [this, that, third])).
+    >>> cnf_parser.token_map
+    {'functions': {'$not#a&function^': 0, 'g': 1, 'c1': 2, 'h': 3, 'f': 4, 'c2': 5}, 'predicates': {'$false': 0, '=': 1, '!=': 2, 'better': 3, 'this_is_a_test_case': 4}, 'variables': {'X': 0, 'Y': 1, 'Z': 2}}
     """
 
     def __init__(
@@ -108,19 +105,19 @@ class CNFParser(Transformer):
         """
         super().__init__()
         if tokens_filename is None:
-            self.function_map: Dict[str, int] = {"$not#a&function^": 0}
-            self.predicate_map: Dict[str, int] = {
-                FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
-                EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
-                INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
+            self.token_map = {
+                "functions": {"$not#a&function^": 0},
+                "predicates": {
+                    FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
+                    EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
+                    INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
+                },
+                "variables": {"X": 0},
             }
-            self.variable_map: Dict[str, int] = {"X": 0}
         else:
-            (
-                self.variable_map,
-                self.function_map,
-                self.predicate_map,
-            ) = _load_token_lists(tokens_filename)
+            self.token_map = _load_token_lists(tokens_filename)
+        self.inverted_token_map: Dict[str, Dict[int, str]] = {}
+        self.invert_token_maps()
         self.extendable = extendable
 
     def __default_token__(self, token):
@@ -155,12 +152,12 @@ class CNFParser(Transformer):
         :returns: an integer ID
         """
         if symbol_type == Variable:
-            symbol_map = self.variable_map
+            symbol_map = self.token_map["variables"]
         else:
             symbol_map = (
-                self.function_map
+                self.token_map["functions"]
                 if symbol_type == Function
-                else self.predicate_map
+                else self.token_map["predicates"]
             )
         if symbol not in symbol_map:
             if self.extendable:
@@ -356,3 +353,55 @@ class CNFParser(Transformer):
         if len(children) == 2:
             return (children[0],) + tuple(children[1])
         return children
+
+    def _term_to_tptp(self, term: Term) -> str:
+        if isinstance(term, Function):
+            function_name = self.inverted_token_map["functions"][term.name]
+            arguments = tuple(
+                self._term_to_tptp(argument) for argument in term.arguments
+            )
+            if arguments != tuple():
+                return f"{function_name}({','.join(arguments)})"
+            return function_name
+        return self.inverted_token_map["variables"][term.name]
+
+    def _literal_to_tptp(self, literal: Literal) -> str:
+        negation = "~" if literal.negated else ""
+        arguments = tuple(
+            self._term_to_tptp(term) for term in literal.atom.arguments
+        )
+        if literal.atom.name == EQUALITY_SYMBOL_ID:
+            return f"{negation}{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
+        if literal.atom.name == FALSEHOOD_SYMBOL_ID:
+            return f"{negation}{FALSEHOOD_SYMBOL}()"
+        predicate_name = self.inverted_token_map["predicates"][
+            literal.atom.name
+        ]
+        return f"{negation}{predicate_name}({', '.join(arguments)})"
+
+    def pretty_print(self, clause: Clause) -> str:
+        """Print a logical forumla back to TPTP language."""
+        res = f"cnf({clause.label}, {clause.role}, "
+        for literal in clause.literals:
+            res += self._literal_to_tptp(literal) + " | "
+        if res[-2:] == "| ":
+            res = res[:-3]
+        if not clause.literals:
+            res += FALSEHOOD_SYMBOL
+        if (
+            clause.inference_parents is not None
+            and clause.inference_rule is not None
+        ):
+            res += (
+                f", inference({clause.inference_rule}, [], ["
+                + ", ".join(clause.inference_parents)
+                + "])"
+            )
+        return res + ")."
+
+    def invert_token_maps(self) -> None:
+        """Update ``inverted_token_map`` used for pretty printing."""
+        for key, value in self.token_map.items():
+            self.inverted_token_map[key] = {
+                token_id: token for token, token_id in value.items()
+            }

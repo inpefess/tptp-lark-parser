@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.0.5"
+version = "0.0.6"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -84,3 +84,14 @@ disable_error_code = "no-redef"
 [[tool.mypy.overrides]]
 module = ["importlib_resources"]
 ignore_missing_imports = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py37,py38,py39,py310
+
+[testenv]
+deps = pytest-cov
+commands = pytest
+"""
