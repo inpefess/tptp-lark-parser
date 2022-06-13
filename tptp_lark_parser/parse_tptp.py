@@ -91,9 +91,8 @@ def parse_tptp(
         _read_and_parse_file(tptp_parser, problem)
         # we save lists on every iteration because the next one may fail
         tokens = {
-            "variables": list(tptp_parser.cnf_parser.variable_map.keys()),
-            "functions": list(tptp_parser.cnf_parser.function_map.keys()),
-            "predicates": list(tptp_parser.cnf_parser.predicate_map.keys()),
+            key: list(value.keys())
+            for key, value in tptp_parser.cnf_parser.token_map.items()
         }
         with open(output_file, "w", encoding="utf-8") as tokens_file:
             json.dump(tokens, tokens_file)

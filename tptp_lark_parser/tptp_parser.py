@@ -44,16 +44,23 @@ class TPTPParser:
     ...     files("tptp_lark_parser")
     ...     .joinpath(os.path.join("resources", "TPTP-mock"))
     ... )
+    >>> tokens_filename = (
+    ...     files("tptp_lark_parser")
+    ...     .joinpath(os.path.join("resources", "tptp_tokens.json"))
+    ... )
     >>> from tptp_lark_parser.grammar import (Literal, Predicate, Variable,
     ...     Function, EQUALITY_SYMBOL_ID)
-    >>> tptp_parser = TPTPParser(
-    ...     tptp_folder=tptp_folder, extendable=True, tokens_filename=None
-    ... )
+    >>> tptp_parser = TPTPParser(tptp_folder, True, tokens_filename)
     >>> clause = Clause(label="this_is_a_test_case", literals=(Literal(True, Predicate(EQUALITY_SYMBOL_ID, (Function(1, (Variable(1), )), Variable(2)))), Literal(False, Predicate(EQUALITY_SYMBOL_ID, (Function(2, ()), Function(3, ())))), Literal(False, Predicate(3, (Variable(1),)))), inference_rule="resolution", inference_parents=("one", "two"))
-    >>> tptp_parser.parse(str(clause))[0] == clause
+    >>> (
+    ...     tptp_parser.parse(tptp_parser.cnf_parser.pretty_print(clause))[0]
+    ...     == clause
+    ... )
     True
     >>> empty_clause = Clause(literals=())
-    >>> tptp_parser.parse(str(empty_clause))[0] == empty_clause
+    >>> (tptp_parser.parse(
+    ...     tptp_parser.cnf_parser.pretty_print(empty_clause))[0] ==
+    ...     empty_clause)
     True
     >>> tptp_text = (
     ...     files("tptp_lark_parser")
@@ -63,11 +70,14 @@ class TPTPParser:
     ...     .read_text()
     ... )
     >>> parsed_clauses = tptp_parser.parse(tptp_text)
-    >>> print("\n".join(map(str, parsed_clauses)))
-    cnf(this_is_a_test_case_1, hypothesis, p4(f4), inference(resolution, [], [one, two])).
-    cnf(this_is_a_test_case_2, hypothesis, ~p4(f4)).
-    cnf(test_axiom, axiom, f4 = f5).
-    cnf(test_axiom_2, axiom, ~f4 = f6).
+    >>> tptp_parser.cnf_parser.invert_token_maps()
+    >>> print(
+    ...     "\n".join(map(tptp_parser.cnf_parser.pretty_print, parsed_clauses))
+    ... )
+    cnf(this_is_a_test_case_1, hypothesis, this_is_a_test_case(test_constant), inference(resolution, [], [one, two])).
+    cnf(this_is_a_test_case_2, hypothesis, ~this_is_a_test_case(test_constant)).
+    cnf(test_axiom, axiom, test_constant = test_constant_2).
+    cnf(test_axiom_2, axiom, ~test_constant = 0).
     """
 
     _tokens_from_resources = str(
