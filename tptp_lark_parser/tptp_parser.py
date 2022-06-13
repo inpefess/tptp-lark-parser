@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# noqa D205
+# noqa D205, D400
 """
-TPTP Parser.
+TPTP Parser
 ============
 """
 import os
