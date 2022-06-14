@@ -77,20 +77,20 @@ class CNFParser(Transformer):
     ... ''')
     >>> cnf_parser = CNFParser()
     >>> cnf_parser.token_map["functions"]
-    {'$not#a&function^': 0}
+    {'f': 0}
     >>> cnf_parser.transform(lark_parsed_tree)
     Traceback (most recent call last):
     ...
-    lark.exceptions.VisitError: Error trying to process rule "variable":
+    lark.exceptions.VisitError: Error trying to process rule "fof_plain_term":
     <BLANKLINE>
-    unknown symbol: Y
+    unknown symbol: g
     >>> cnf_parser.extendable = True
     >>> clause = cnf_parser.transform(lark_parsed_tree)
     >>> cnf_parser.invert_token_maps()
     >>> print(cnf_parser.pretty_print(clause))
     cnf(test, axiom, f(X,g(Y),h(Z,c1)) = f(X,Y,c2) | ~better(f(X), g(Y)) | $false() | this_is_a_test_case(), inference(resolution, [], [this, that, third])).
     >>> cnf_parser.token_map
-    {'functions': {'$not#a&function^': 0, 'g': 1, 'c1': 2, 'h': 3, 'f': 4, 'c2': 5}, 'predicates': {'$false': 0, '=': 1, '!=': 2, 'better': 3, 'this_is_a_test_case': 4}, 'variables': {'X': 0, 'Y': 1, 'Z': 2}}
+    {'functions': {'f': 0, 'g': 1, 'c1': 2, 'h': 3, 'c2': 4}, 'predicates': {'$false': 0, '=': 1, '!=': 2, 'better': 3, 'this_is_a_test_case': 4}, 'variables': {'X0': 0, 'X1': 1, ..., 'X999': 999, 'X': 1000, 'Y': 1001, 'Z': 1002}}
     """
 
     def __init__(
@@ -106,13 +106,13 @@ class CNFParser(Transformer):
         super().__init__()
         if tokens_filename is None:
             self.token_map = {
-                "functions": {"$not#a&function^": 0},
+                "functions": {"f": 0},
                 "predicates": {
                     FALSEHOOD_SYMBOL: FALSEHOOD_SYMBOL_ID,
                     EQUALITY_SYMBOL: EQUALITY_SYMBOL_ID,
                     INEQUALITY_SYMBOL: INEQUALITY_SYMBOL_ID,
                 },
-                "variables": {"X": 0},
+                "variables": {f"X{i}": i for i in range(1000)},
             }
         else:
             self.token_map = _load_token_lists(tokens_filename)
@@ -160,7 +160,7 @@ class CNFParser(Transformer):
                 else self.token_map["predicates"]
             )
         if symbol not in symbol_map:
-            if self.extendable:
+            if self.extendable or symbol_type == Variable:
                 symbol_map.update({symbol: 1 + max(symbol_map.values())})
             else:
                 raise ValueError(f"unknown symbol: {symbol}")
