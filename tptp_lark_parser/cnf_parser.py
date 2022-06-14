@@ -223,11 +223,11 @@ class CNFParser(Transformer):
         if children[0] == "~":
             return Literal(True, children[1])
         if isinstance(children[0], Predicate):
-            if children[0].name == INEQUALITY_SYMBOL_ID:
+            if children[0].index == INEQUALITY_SYMBOL_ID:
                 return Literal(
                     negated=True,
                     atom=Predicate(
-                        name=EQUALITY_SYMBOL_ID,
+                        index=EQUALITY_SYMBOL_ID,
                         arguments=children[0].arguments,
                     ),
                 )
@@ -275,7 +275,7 @@ class CNFParser(Transformer):
         """
         if len(children) == 1:
             if (
-                children[0].atom.name == FALSEHOOD_SYMBOL_ID
+                children[0].atom.index == FALSEHOOD_SYMBOL_ID
                 and not children[0].negated
             ):
                 return Clause(tuple())
@@ -356,26 +356,26 @@ class CNFParser(Transformer):
 
     def _term_to_tptp(self, term: Term) -> str:
         if isinstance(term, Function):
-            function_name = self.inverted_token_map["functions"][term.name]
+            function_name = self.inverted_token_map["functions"][term.index]
             arguments = tuple(
                 self._term_to_tptp(argument) for argument in term.arguments
             )
             if arguments != tuple():
                 return f"{function_name}({','.join(arguments)})"
             return function_name
-        return self.inverted_token_map["variables"][term.name]
+        return self.inverted_token_map["variables"][term.index]
 
     def _literal_to_tptp(self, literal: Literal) -> str:
         negation = "~" if literal.negated else ""
         arguments = tuple(
             self._term_to_tptp(term) for term in literal.atom.arguments
         )
-        if literal.atom.name == EQUALITY_SYMBOL_ID:
+        if literal.atom.index == EQUALITY_SYMBOL_ID:
             return f"{negation}{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
-        if literal.atom.name == FALSEHOOD_SYMBOL_ID:
+        if literal.atom.index == FALSEHOOD_SYMBOL_ID:
             return f"{negation}{FALSEHOOD_SYMBOL}()"
         predicate_name = self.inverted_token_map["predicates"][
-            literal.atom.name
+            literal.atom.index
         ]
         return f"{negation}{predicate_name}({', '.join(arguments)})"
 

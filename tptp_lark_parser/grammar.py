@@ -37,7 +37,7 @@ class Variable:
     .. _variable:
     """
 
-    name: int
+    index: int
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,7 @@ class Function:
     .. _Function:
     """
 
-    name: int
+    index: int
     arguments: Tuple[Union[Variable, "Function"], ...]
 
 
@@ -68,7 +68,7 @@ class Predicate:
     .. _Predicate:
     """
 
-    name: int
+    index: int
     arguments: Tuple[Term, ...]
 
 
