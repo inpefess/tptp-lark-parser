@@ -92,6 +92,17 @@ isolated_build = True
 envlist = py37,py38,py39,py310
 
 [testenv]
-deps = pytest-cov
-commands = pytest
+deps =
+    pytest-cov
+    pydocstyle
+    flake8
+    pylint
+    mypy
+    toml
+commands =
+    pydocstyle tptp_lark_parser
+    flake8 tptp_lark_parser
+    pylint tptp_lark_parser
+    mypy tptp_lark_parser
+    pytest
 """
