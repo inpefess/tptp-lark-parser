@@ -70,9 +70,6 @@ max-line-length = 79
 [tool.pylint.design]
 max-statements = 10
 
-[tool.pylint.typecheck]
-generated-members = ["orjson"]
-
 [tool.mypy]
 show_error_codes = true
 incremental = false
