@@ -19,7 +19,7 @@ CNF Parser
 """
 import dataclasses
 import json
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional
 
 from lark import Transformer
 
@@ -86,7 +86,6 @@ class CNFParser(Transformer):
     unknown symbol: g
     >>> cnf_parser.extendable = True
     >>> clause = cnf_parser.transform(lark_parsed_tree)
-    >>> cnf_parser.invert_token_maps()
     >>> print(cnf_parser.pretty_print(clause))
     cnf(test, axiom, f(X,g(Y),h(Z,c1)) = f(X,Y,c2) | ~better(f(X), g(Y)) | $false() | this_is_a_test_case(), inference(resolution, [], [this, that, third])).
     >>> cnf_parser.token_map
@@ -116,8 +115,9 @@ class CNFParser(Transformer):
             }
         else:
             self.token_map = _load_token_lists(tokens_filename)
-        self.inverted_token_map: Dict[str, Dict[int, str]] = {}
-        self.invert_token_maps()
+        self.token_lists: Dict[str, List[str]] = {
+            key: list(value.keys()) for key, value in self.token_map.items()
+        }
         self.extendable = extendable
 
     def __default_token__(self, token):
@@ -137,31 +137,26 @@ class CNFParser(Transformer):
     def _function(self, children):
         """Functional symbol with arguments."""
         function_name = children[0]
-        function_id = self._get_symbol_id(function_name, Function)
+        function_id = self._get_symbol_id(function_name, "functions")
         if len(children) > 1:
             return Function(function_id, tuple(children[1]))
         return Function(function_id, ())
 
-    def _get_symbol_id(
-        self, symbol: str, symbol_type: Union[Variable, Function, Predicate]
-    ) -> int:
+    def _get_symbol_id(self, symbol: str, symbol_type: str) -> int:
         """
         Get an integer ID for a symbol.
 
         :param symbol: a predicate or functional symbol, or a variable name
+        :param symbol_type: a type of the symbol (variables, functions, or
+            predicates)
         :returns: an integer ID
         """
-        if symbol_type == Variable:
-            symbol_map = self.token_map["variables"]
-        else:
-            symbol_map = (
-                self.token_map["functions"]
-                if symbol_type == Function
-                else self.token_map["predicates"]
-            )
+        symbol_map = self.token_map[symbol_type]
+        symbol_list = self.token_lists[symbol_type]
         if symbol not in symbol_map:
-            if self.extendable or symbol_type == Variable:
+            if self.extendable or symbol_type == "variables":
                 symbol_map.update({symbol: 1 + max(symbol_map.values())})
+                symbol_list.append(symbol)
             else:
                 raise ValueError(f"unknown symbol: {symbol}")
         return symbol_map[symbol]
@@ -196,7 +191,7 @@ class CNFParser(Transformer):
 
         <variable>             ::= <upper_word>
         """
-        return Variable(self._get_symbol_id(children[0], Variable))
+        return Variable(self._get_symbol_id(children[0], "variables"))
 
     @staticmethod
     def fof_arguments(children):
@@ -235,7 +230,7 @@ class CNFParser(Transformer):
 
     def _predicate(self, children):
         """Predicates are atomic formulae."""
-        predicate_id = self._get_symbol_id(children[0], Predicate)
+        predicate_id = self._get_symbol_id(children[0], "predicates")
         if len(children) > 1:
             return Predicate(predicate_id, tuple(children[1]))
         return Predicate(predicate_id, ())
@@ -254,7 +249,7 @@ class CNFParser(Transformer):
 
         <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
         """
-        predicate_id = self._get_symbol_id(children[1], Predicate)
+        predicate_id = self._get_symbol_id(children[1], "predicates")
         return Predicate(predicate_id, (children[0], children[2]))
 
     def fof_infix_unary(self, children):
@@ -263,7 +258,7 @@ class CNFParser(Transformer):
 
         <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
         """
-        predicate_id = self._get_symbol_id(children[1], Predicate)
+        predicate_id = self._get_symbol_id(children[1], "predicates")
         return Predicate(predicate_id, (children[0], children[2]))
 
     @staticmethod
@@ -356,14 +351,14 @@ class CNFParser(Transformer):
 
     def _term_to_tptp(self, term: Term) -> str:
         if isinstance(term, Function):
-            function_name = self.inverted_token_map["functions"][term.index]
+            function_name = self.token_lists["functions"][term.index]
             arguments = tuple(
                 self._term_to_tptp(argument) for argument in term.arguments
             )
             if arguments != tuple():
                 return f"{function_name}({','.join(arguments)})"
             return function_name
-        return self.inverted_token_map["variables"][term.index]
+        return self.token_lists["variables"][term.index]
 
     def _literal_to_tptp(self, literal: Literal) -> str:
         negation = "~" if literal.negated else ""
@@ -374,9 +369,7 @@ class CNFParser(Transformer):
             return f"{negation}{arguments[0]} {EQUALITY_SYMBOL} {arguments[1]}"
         if literal.atom.index == FALSEHOOD_SYMBOL_ID:
             return f"{negation}{FALSEHOOD_SYMBOL}()"
-        predicate_name = self.inverted_token_map["predicates"][
-            literal.atom.index
-        ]
+        predicate_name = self.token_lists["predicates"][literal.atom.index]
         return f"{negation}{predicate_name}({', '.join(arguments)})"
 
     def pretty_print(self, clause: Clause) -> str:
@@ -398,10 +391,3 @@ class CNFParser(Transformer):
                 + "])"
             )
         return res + ")."
-
-    def invert_token_maps(self) -> None:
-        """Update ``inverted_token_map`` used for pretty printing."""
-        for key, value in self.token_map.items():
-            self.inverted_token_map[key] = {
-                token_id: token for token, token_id in value.items()
-            }
