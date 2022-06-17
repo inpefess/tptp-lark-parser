@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.0.6"
+version = "0.0.7"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -55,7 +55,7 @@ build-backend = "poetry.core.masonry.api"
 minversion = "6.0"
 addopts = "--doctest-modules --cov tptp_lark_parser --cov-report term-missing --cov-report xml --cov-fail-under=100 --junit-xml test-results/tptp-lark-parser.xml"
 testpaths = ["tptp_lark_parser"]
-doctest_optionflags = "NORMALIZE_WHITESPACE"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.coverage.report]
 exclude_lines = [
@@ -63,18 +63,12 @@ exclude_lines = [
     "from importlib.resources import files"
 ]
 
-[tool.pylint.master]
-disable = "bad-continuation"
-
 [tool.pylint.format]
 ignore-long-lines = "(::=|:==|this_is_a_test_case|:math:|.. math::|https://)"
 max-line-length = 79
 
 [tool.pylint.design]
 max-statements = 10
-
-[tool.pylint.typecheck]
-generated-members = ["orjson"]
 
 [tool.mypy]
 show_error_codes = true
@@ -92,6 +86,17 @@ isolated_build = True
 envlist = py37,py38,py39,py310
 
 [testenv]
-deps = pytest-cov
-commands = pytest
+deps =
+    pytest-cov
+    pydocstyle
+    flake8
+    pylint
+    mypy
+    toml
+commands =
+    pydocstyle tptp_lark_parser
+    flake8 tptp_lark_parser
+    pylint tptp_lark_parser
+    mypy tptp_lark_parser
+    pytest
 """

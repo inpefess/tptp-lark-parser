@@ -70,7 +70,6 @@ class TPTPParser:
     ...     .read_text()
     ... )
     >>> parsed_clauses = tptp_parser.parse(tptp_text)
-    >>> tptp_parser.cnf_parser.invert_token_maps()
     >>> print(
     ...     "\n".join(map(tptp_parser.cnf_parser.pretty_print, parsed_clauses))
     ... )
