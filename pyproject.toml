@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.0.6"
+version = "0.0.7"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
