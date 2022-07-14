@@ -19,7 +19,7 @@ CNF Parser
 """
 import dataclasses
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from lark import Transformer
 
@@ -124,7 +124,7 @@ class CNFParser(Transformer):
         """All the tokens we return as is."""
         return token.value
 
-    def __default__(self, data, children, meta):
+    def __default__(self, data, children: List[Any], meta):
         """Pop one element lists.
 
         By default, if we see a list of only one element, we return that
@@ -134,7 +134,7 @@ class CNFParser(Transformer):
             return children[0]
         return children
 
-    def _function(self, children):
+    def _function(self, children: List[Any]):
         """Functional symbol with arguments."""
         function_name = children[0]
         function_id = self._get_symbol_id(function_name, "functions")
@@ -150,6 +150,8 @@ class CNFParser(Transformer):
         :param symbol_type: a type of the symbol (variables, functions, or
             predicates)
         :returns: an integer ID
+        :raises ValueError: if a symbol is not in a map and maps were defined
+            as not extendable
         """
         symbol_map = self.token_map[symbol_type]
         symbol_list = self.token_lists[symbol_type]
@@ -161,46 +163,55 @@ class CNFParser(Transformer):
                 raise ValueError(f"unknown symbol: {symbol}")
         return symbol_map[symbol]
 
-    def fof_defined_plain_formula(self, children):
+    def fof_defined_plain_formula(self, children: List[Any]):
         """
         Predicate with or without arguments.
 
         <fof_defined_plain_formula> :== <defined_proposition> | <defined_predicate>(<fof_arguments>)
+
+        :param children: parsed tree node's children
         """
         return self._predicate(children)
 
-    def fof_plain_term(self, children):
+    def fof_plain_term(self, children: List[Any]):
         """
         Functional symbol with or without (a constant) arguments.
 
         <fof_plain_term>       ::= <constant> | <functor>(<fof_arguments>)
+        :param children: parsed tree node's children
         """
         return self._function(children)
 
-    def fof_defined_term(self, children):
+    def fof_defined_term(self, children: List[Any]):
         """
         Another way to describe a functional symbol.
 
         <fof_defined_term>     ::= <defined_term> | <fof_defined_atomic_term>
+
+        :param children: parsed tree node's children
         """
         return self._function(children)
 
-    def variable(self, children):
+    def variable(self, children: List[Any]):
         """
         Variable (supposed to be universally quantified).
 
         <variable>             ::= <upper_word>
+
+        :param children: parsed tree node's children
         """
         return Variable(self._get_symbol_id(children[0], "variables"))
 
     @staticmethod
-    def fof_arguments(children):
+    def fof_arguments(children: List[Any]):
         """
         List of arguments, organised in pairs.
 
         <fof_arguments>        ::= <fof_term> | <fof_term>,<fof_arguments>
+
+        :param children: parsed tree node's children
         """
-        result = ()
+        result: Tuple[Any, ...] = ()
         for item in children:
             if not isinstance(item, (Variable, Function)):
                 result = result + tuple(item)
@@ -209,11 +220,13 @@ class CNFParser(Transformer):
         return result
 
     @staticmethod
-    def literal(children):
+    def literal(children: List[Any]):
         """
         Literal is a possible negated predicate.
 
         <literal>              ::= <fof_atomic_formula> | ~ <fof_atomic_formula> | <fof_infix_unary>
+
+        :param children: parsed tree node's children
         """
         if children[0] == "~":
             return Literal(True, children[1])
@@ -228,45 +241,53 @@ class CNFParser(Transformer):
                 )
         return Literal(False, children[0])
 
-    def _predicate(self, children):
+    def _predicate(self, children: List[Any]):
         """Predicates are atomic formulae."""
         predicate_id = self._get_symbol_id(children[0], "predicates")
         if len(children) > 1:
             return Predicate(predicate_id, tuple(children[1]))
         return Predicate(predicate_id, ())
 
-    def fof_plain_atomic_formula(self, children):
+    def fof_plain_atomic_formula(self, children: List[Any]):
         """
         Another way for writing predicates.
 
         <fof_plain_atomic_formula> :== <proposition> | <predicate>(<fof_arguments>)
+
+        :param children: parsed tree node's children
         """
         return self._predicate(children)
 
-    def fof_defined_infix_formula(self, children):
+    def fof_defined_infix_formula(self, children: List[Any]):
         """
         Translate predicates in the infix form to the prefix.
 
         <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
+
+        :param children: parsed tree node's children
         """
         predicate_id = self._get_symbol_id(children[1], "predicates")
         return Predicate(predicate_id, (children[0], children[2]))
 
-    def fof_infix_unary(self, children):
+    def fof_infix_unary(self, children: List[Any]):
         """
         Translate predicates in the infix form to the prefix.
 
         <fof_infix_unary>      ::= <fof_term> <infix_inequality> <fof_term>
+
+        :param children: parsed tree node's children
         """
         predicate_id = self._get_symbol_id(children[1], "predicates")
         return Predicate(predicate_id, (children[0], children[2]))
 
     @staticmethod
-    def disjunction(children):
+    def disjunction(children: List[Any]):
         """
         Clause structure.
 
         <disjunction>          ::= <literal> | <disjunction> <vline> <literal>
+
+        :param children: parsed tree node's children
         """
         if len(children) == 1:
             if (
@@ -275,7 +296,7 @@ class CNFParser(Transformer):
             ):
                 return Clause(tuple())
             return Clause(tuple(children))
-        literals = ()
+        literals: Tuple[Any, ...] = ()
         for item in (children[0], children[2]):
             if isinstance(item, Clause):
                 literals = literals + item.literals
@@ -284,11 +305,13 @@ class CNFParser(Transformer):
         return Clause(literals)
 
     @staticmethod
-    def cnf_annotated(children):
+    def cnf_annotated(children: List[Any]):
         """
         Annotated CNF formula (clause).
 
         <cnf_annotated>        ::= cnf(<name>,<formula_role>,<cnf_formula> <annotations>).
+
+        :param children: parsed tree node's children
         """
         clause = children[2]
         inference_rule = None
@@ -308,21 +331,25 @@ class CNFParser(Transformer):
         )
 
     @staticmethod
-    def inference_record(children):
+    def inference_record(children: List[Any]):
         """
         Inference record (parents and rule).
 
         <inference_record>     :== inference(<inference_rule>,<useful_info>,
         <inference_parents>)
+
+        :param children: parsed tree node's children
         """
         return {"inference_record": (children[0], tuple(children[2]))}
 
     @staticmethod
-    def annotations(children):
+    def annotations(children: List[Any]):
         """
         Annotation (we care only about inference info from it).
 
         <annotations>          ::= ,<source><optional_info> | <null>
+
+        :param children: parsed tree node's children
         """
         if isinstance(children, list):
             if len(children) == 1:
@@ -330,20 +357,24 @@ class CNFParser(Transformer):
         return children
 
     @staticmethod
-    def parent_info(children):
+    def parent_info(children: List[Any]):
         """
         Inference parents.
 
         <parent_info>          :== <source><parent_details>
+
+        :param children: parsed tree node's children
         """
         return children[0]
 
     @staticmethod
-    def parent_list(children):
+    def parent_list(children: List[Any]):
         """
         Inference parents list.
 
         <parent_list>          :== <parent_info> | <parent_info>,<parent_list>
+
+        :param children: parsed tree node's children
         """
         if len(children) == 2:
             return (children[0],) + tuple(children[1])
@@ -373,7 +404,12 @@ class CNFParser(Transformer):
         return f"{negation}{predicate_name}({', '.join(arguments)})"
 
     def pretty_print(self, clause: Clause) -> str:
-        """Print a logical formula back to TPTP language."""
+        """
+        Print a logical formula back to TPTP language.
+
+        :param clause: a logical clause to print
+        :returns: a TPTP string
+        """
         res = f"cnf({clause.label}, {clause.role}, "
         for literal in clause.literals:
             res += self._literal_to_tptp(literal) + " | "
