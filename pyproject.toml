@@ -39,6 +39,7 @@ sphinx-rtd-theme = "*"
 sphinx-autodoc-typehints = "*"
 flake8 = "*"
 pydocstyle = "*"
+pyenchant = "*"
 
 [tool.black]
 line-length=79
@@ -62,6 +63,10 @@ exclude_lines = [
     "pragma: no cover",
     "from importlib.resources import files"
 ]
+
+[tool.pylint.spelling]
+spelling-dict = "en_GB"
+spelling-private-dict-file = "spelling.dict"
 
 [tool.pylint.format]
 ignore-long-lines = "(::=|:==|this_is_a_test_case|:math:|.. math::|https://)"
@@ -93,6 +98,7 @@ deps =
     pylint
     mypy
     toml
+    pyenchant
 commands =
     pydocstyle tptp_lark_parser
     flake8 tptp_lark_parser

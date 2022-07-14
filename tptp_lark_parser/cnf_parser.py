@@ -96,7 +96,7 @@ class CNFParser(Transformer):
         self, tokens_filename: Optional[str] = None, extendable: bool = False
     ):
         """
-        Initialize functional and predicate symbols lists.
+        Initialise functional and predicate symbols lists.
 
         :param tokens_filename: a filename of known tokens storage
         :param extendable: when set to ``False``, the parser fails
@@ -245,7 +245,7 @@ class CNFParser(Transformer):
 
     def fof_defined_infix_formula(self, children):
         """
-        Translte predicates in the infix form to the prefix.
+        Translate predicates in the infix form to the prefix.
 
         <fof_defined_infix_formula> ::= <fof_term> <defined_infix_pred> <fof_term>
         """
@@ -341,7 +341,7 @@ class CNFParser(Transformer):
     @staticmethod
     def parent_list(children):
         """
-        Inference parents lits.
+        Inference parents list.
 
         <parent_list>          :== <parent_info> | <parent_info>,<parent_list>
         """
@@ -373,7 +373,7 @@ class CNFParser(Transformer):
         return f"{negation}{predicate_name}({', '.join(arguments)})"
 
     def pretty_print(self, clause: Clause) -> str:
-        """Print a logical forumla back to TPTP language."""
+        """Print a logical formula back to TPTP language."""
         res = f"cnf({clause.label}, {clause.role}, "
         for literal in clause.literals:
             res += self._literal_to_tptp(literal) + " | "
