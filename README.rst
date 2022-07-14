@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
-|Binder|\ |PyPI version|\ |CircleCI|\ |AppveyorCI|\ |Documentation Status|\ |codecov|
+|Binder|\ |PyPI version|\ |Anaconda|\ |CircleCI|\ |AppveyorCI|\ |Documentation Status|\ |codecov|
 
 tptp-lark-parser
 ================
@@ -30,13 +30,19 @@ The best way to install this package is to use ``pip``:
 .. code:: sh
 
    pip install tptp-lark-parser
+
+The package is also available on ``conda-forge``:
+   
+.. code:: sh
+
+   conda install -c conda-forge tptp-lark-parser
    
 One can also run it in a Docker container:
 
 .. code:: sh
 
    docker build -t tptp-lark-parser https://github.com/inpefess/tptp-lark-parser.git
-   docker run -it --rm -p 8888:8888 tptp-lark-parser jupyter-lab --ip=0.0.0.0 --port=8888 --no-browser
+   docker run -it --rm -p 8888:8888 tptp-lark-parser jupyter-lab --ip=0.0.0.0 --port=8888
 
 How to use
 ==========
@@ -100,3 +106,5 @@ More documentation can be found
    :target: https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=example.ipynb
 .. |AppveyorCI| image:: https://ci.appveyor.com/api/projects/status/7n0g3a3ag5hjtfi0?svg=true
    :target: https://ci.appveyor.com/project/inpefess/tptp-lark-parser
+.. |Anaconda| image:: https://anaconda.org/conda-forge/tptp-lark-parser/badges/version.svg
+   :target: https://anaconda.org/conda-forge/tptp-lark-parser
