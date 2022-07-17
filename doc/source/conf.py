@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 project = "tptp-lark-parser"
 # pylint: disable=redefined-builtin,invalid-name
 copyright = "2022, Boris Shminke"
-version = "0.0.7"
+version = "0.0.8"
 # pylint: disable=invalid-name
 author = "Boris Shminke"
 extensions = ["sphinx.ext.autodoc"]
