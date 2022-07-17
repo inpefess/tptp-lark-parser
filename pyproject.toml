@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.0.7"
+version = "0.0.8"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -39,6 +39,8 @@ sphinx-rtd-theme = "*"
 sphinx-autodoc-typehints = "*"
 flake8 = "*"
 pydocstyle = "*"
+pyenchant = "*"
+tbump = "*"
 
 [tool.black]
 line-length=79
@@ -62,6 +64,20 @@ exclude_lines = [
     "pragma: no cover",
     "from importlib.resources import files"
 ]
+
+[tool.pylint.MASTER]
+load-plugins = ["pylint.extensions.docparams"]
+
+[tool.pylint.parameter_documentation]
+accept-no-param-doc = false
+accept-no-raise-doc = false
+accept-no-return-doc = true
+accept-no-yields-doc = false
+default-docstring-type = "sphinx"
+
+[tool.pylint.spelling]
+spelling-dict = "en_GB"
+spelling-private-dict-file = "spelling.dict"
 
 [tool.pylint.format]
 ignore-long-lines = "(::=|:==|this_is_a_test_case|:math:|.. math::|https://)"
@@ -93,6 +109,7 @@ deps =
     pylint
     mypy
     toml
+    pyenchant
 commands =
     pydocstyle tptp_lark_parser
     flake8 tptp_lark_parser
@@ -100,3 +117,29 @@ commands =
     mypy tptp_lark_parser
     pytest
 """
+
+[tool.tbump]
+github_url = "https://github.com/inpfess/tptp-lark-parser/"
+
+[tool.tbump.version]
+current = "0.0.8"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[tool.tbump.file]]
+src = "tptp_lark_parser/__init__.py"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
+
+[[tool.tbump.file]]
+src = "doc/source/conf.py"

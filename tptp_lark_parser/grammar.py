@@ -103,7 +103,7 @@ class Clause:
     :param literals: a list of literals, forming the clause
     :param label: comes from the problem file or starts with ``inferred_`` if
          inferred during the episode
-    :param role: formula role (axiom, hypothesis, etc)
+    :param role: formula role: axiom, hypothesis, ...
     :param inference_parents: a list of labels from which the clause was
          inferred. For clauses from the problem statement, this list is empty
     :param inference_rule: the rule according to which the clause was got from
