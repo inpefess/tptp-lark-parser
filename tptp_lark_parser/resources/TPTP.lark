@@ -1,10 +1,6 @@
 tptp_file            : tptp_input*
 tptp_input           : annotated_formula | include
-annotated_formula    : tff_annotated | tcf_annotated | fof_annotated | cnf_annotated | tpi_annotated
-tpi_annotated        : "tpi" "(" NAME "," FORMULA_ROLE "," tpi_formula annotations ")"  "." 
-tpi_formula          : fof_formula
-tff_annotated        : "tff" "(" NAME "," FORMULA_ROLE "," tff_formula annotations ")"  "." 
-tcf_annotated        : "tcf" "(" NAME "," FORMULA_ROLE "," tcf_formula annotations ")"  "." 
+annotated_formula    : fof_annotated | cnf_annotated
 fof_annotated        : "fof" "(" NAME "," FORMULA_ROLE "," fof_formula annotations ")"  "." 
 cnf_annotated        : "cnf" "(" NAME "," FORMULA_ROLE "," cnf_formula annotations ")"  "." 
 annotations          :  "," source optional_info | null
@@ -13,59 +9,6 @@ logic_defn_rule      : logic_defn_lhs ASSIGNMENT logic_defn_rhs
 logic_defn_lhs       : logic_defn_value  | NAME | "$constants" | "$quantification" | "$consequence" | "$modalities"
 logic_defn_rhs       : logic_defn_value
 logic_defn_value     : DEFINED_CONSTANT | "$rigid" | "$flexible" | "$constant" | "$varying" | "$cumulative" | "$decreasing" | "$local" | "$global" | "$modal_system_K" | "$modal_system_T" | "$modal_system_D" | "$modal_system_S4" | "$modal_system_S5" | "$modal_axiom_K" | "$modal_axiom_T" | "$modal_axiom_B" | "$modal_axiom_D" | "$modal_axiom_4" | "$modal_axiom_5"
-tff_formula          : tff_logic_formula | tff_atom_typing | tff_subtype | tfx_sequent
-tff_logic_formula    : tff_unitary_formula | tff_unary_formula | tff_binary_formula | tff_defined_infix
-tff_binary_formula   : tff_binary_nonassoc | tff_binary_assoc
-tff_binary_nonassoc  : tff_unit_formula NONASSOC_CONNECTIVE tff_unit_formula
-tff_binary_assoc     : tff_or_formula | tff_and_formula
-tff_or_formula       : tff_unit_formula VLINE tff_unit_formula | tff_or_formula VLINE tff_unit_formula
-tff_and_formula      : tff_unit_formula "&" tff_unit_formula | tff_and_formula "&" tff_unit_formula
-tff_unit_formula     : tff_unitary_formula | tff_unary_formula | tff_defined_infix
-tff_preunit_formula  : tff_unitary_formula | tff_prefix_unary
-tff_unitary_formula  : tff_quantified_formula | tff_atomic_formula | tfx_unitary_formula |  "(" tff_logic_formula ")" 
-tfx_unitary_formula  : variable
-tff_quantified_formula : FOF_QUANTIFIER "[" tff_variable_list "]" ":" tff_unit_formula
-tff_variable_list    : tff_variable | tff_variable "," tff_variable_list
-tff_variable         : tff_typed_variable | variable
-tff_typed_variable   : variable ":" tff_atomic_type
-tff_unary_formula    : tff_prefix_unary | tff_infix_unary
-tff_prefix_unary     : UNARY_CONNECTIVE tff_preunit_formula
-tff_infix_unary      : tff_unitary_term INFIX_INEQUALITY tff_unitary_term
-tff_atomic_formula   : tff_plain_atomic | tff_defined_atomic | tff_system_atomic
-tff_plain_atomic     : constant | FUNCTOR "(" tff_arguments ")" | proposition | predicate "(" tff_arguments ")" 
-tff_defined_atomic   : tff_defined_plain
-tff_defined_plain    : DEFINED_CONSTANT | DEFINED_FUNCTOR "(" tff_arguments ")"  | tfx_conditional | tfx_let | defined_proposition | defined_predicate "(" tff_arguments ")"
-tff_defined_infix    : tff_unitary_term defined_infix_pred tff_unitary_term
-tff_system_atomic    : SYSTEM_CONSTANT | SYSTEM_FUNCTOR "(" tff_arguments ")" | system_proposition | system_predicate "(" tff_arguments ")" 
-tfx_conditional      : "$ite" "(" tff_logic_formula "," tff_term "," tff_term ")" 
-tfx_let              : "$let" "(" tfx_let_types "," tfx_let_defns "," tff_term ")" 
-tfx_let_types        : tff_atom_typing | "[" tff_atom_typing_list "]"
-tff_atom_typing_list : tff_atom_typing | tff_atom_typing "," tff_atom_typing_list
-tfx_let_defns        : tfx_let_defn | "[" tfx_let_defn_list "]"
-tfx_let_defn         : tfx_let_lhs ASSIGNMENT tff_term
-tfx_let_lhs          : tff_plain_atomic | tfx_tuple
-tfx_let_defn_list    : tfx_let_defn | tfx_let_defn "," tfx_let_defn_list
-tff_term             : tff_logic_formula | DEFINED_TERM | tfx_tuple
-tff_unitary_term     : tff_atomic_formula | DEFINED_TERM | tfx_tuple | variable |  "(" tff_logic_formula ")" 
-tfx_tuple            : "[" "]" | "[" tff_arguments "]"
-tff_arguments        : tff_term | tff_term "," tff_arguments
-tff_atom_typing      : untyped_atom ":" tff_top_level_type | "(" tff_atom_typing ")" 
-tff_top_level_type   : tff_atomic_type | tff_non_atomic_type
-tff_non_atomic_type  : tff_mapping_type | tf1_quantified_type | "(" tff_non_atomic_type ")" 
-tf1_quantified_type  : "!>" [tff_variable_list] ":" tff_monotype
-tff_monotype         : tff_atomic_type |  "(" tff_mapping_type ")"  | tf1_quantified_type
-tff_unitary_type     : tff_atomic_type |  "(" tff_xprod_type ")" 
-tff_atomic_type      : type_constant | defined_type | variable | type_functor "(" tff_type_arguments ")"  | "(" tff_atomic_type ")"  | tfx_tuple_type 
-tff_type_arguments   : tff_atomic_type | tff_atomic_type "," tff_type_arguments
-tff_mapping_type     : tff_unitary_type ARROW tff_atomic_type
-tff_xprod_type       : tff_unitary_type STAR tff_atomic_type | tff_xprod_type STAR tff_atomic_type
-tfx_tuple_type       : "[" tff_type_list "]"
-tff_type_list        : tff_top_level_type | tff_top_level_type "," tff_type_list
-tff_subtype          : untyped_atom SUBTYPE_SIGN atom 
-tfx_sequent          : tfx_tuple GENTZEN_ARROW tfx_tuple | "(" tfx_sequent ")" 
-tcf_formula          : tcf_logic_formula | tff_atom_typing
-tcf_logic_formula    : tcf_quantified_formula | cnf_formula
-tcf_quantified_formula : "!" "[" tff_variable_list "]" ":" cnf_formula
 fof_formula          : fof_logic_formula | fof_sequent
 fof_logic_formula    : fof_binary_formula | fof_unary_formula | fof_unitary_formula
 fof_binary_formula   : fof_binary_nonassoc | fof_binary_assoc
@@ -99,9 +42,6 @@ fof_formula_tuple_list : fof_logic_formula | fof_logic_formula "," fof_formula_t
 cnf_formula          : disjunction |  "(" disjunction ")" 
 disjunction          : literal | disjunction VLINE literal
 literal              : fof_atomic_formula | UNARY_CONNECTIVE fof_atomic_formula | fof_infix_unary
-THF_QUANTIFIER       : FOF_QUANTIFIER | TH0_QUANTIFIER| TH1_QUANTIFIER
-TH1_QUANTIFIER       : "!>" | "?*"
-TH0_QUANTIFIER       : "^" | "@+" | "@-"
 SUBTYPE_SIGN         : "<<"
 FOF_QUANTIFIER       : "!" | "?"
 NONASSOC_CONNECTIVE  : "<=>" | "=>" | "<=" | "<~>" | "~" VLINE | "~&"
@@ -170,10 +110,9 @@ include              : "include" "(" FILE_NAME formula_selection ")"  "."
 formula_selection    :  "," "[" name_list "]" | null
 name_list            : NAME | NAME "," name_list
 general_term         : general_data | general_data ":" general_term | general_list
-general_data         : ATOMIC_WORD | general_function | variable | NUMBER | DISTINCT_OBJECT | formula_data | "bind" "(" variable "," formula_data ")"  | "bind_type" "(" variable "," bound_type ")"
+general_data         : ATOMIC_WORD | general_function | variable | NUMBER | DISTINCT_OBJECT | formula_data | "bind" "(" variable "," formula_data ")"
 general_function     : ATOMIC_WORD "(" general_terms ")"
-bound_type           : "$tff" "(" tff_top_level_type ")" 
-formula_data         : "$tff" "(" tff_formula ")"  | "$fof" "(" fof_formula ")"  | "$cnf" "(" cnf_formula ")"  | "$fot" "(" fof_term ")" 
+formula_data         : "$fof" "(" fof_formula ")"  | "$cnf" "(" cnf_formula ")"  | "$fot" "(" fof_term ")" 
 general_list         : "[" "]" | "[" general_terms "]"
 general_terms        : general_term | general_term "," general_terms
 NAME                 : ATOMIC_WORD | INTEGER
