@@ -1,67 +1,17 @@
 tptp_file            : tptp_input*
 tptp_input           : annotated_formula | include
-annotated_formula    : thf_annotated | tff_annotated | tcf_annotated | fof_annotated | cnf_annotated | tpi_annotated
+annotated_formula    : tff_annotated | tcf_annotated | fof_annotated | cnf_annotated | tpi_annotated
 tpi_annotated        : "tpi" "(" NAME "," FORMULA_ROLE "," tpi_formula annotations ")"  "." 
 tpi_formula          : fof_formula
-thf_annotated        : "thf" "(" NAME "," FORMULA_ROLE "," thf_formula annotations ")"  "." 
 tff_annotated        : "tff" "(" NAME "," FORMULA_ROLE "," tff_formula annotations ")"  "." 
 tcf_annotated        : "tcf" "(" NAME "," FORMULA_ROLE "," tcf_formula annotations ")"  "." 
 fof_annotated        : "fof" "(" NAME "," FORMULA_ROLE "," fof_formula annotations ")"  "." 
 cnf_annotated        : "cnf" "(" NAME "," FORMULA_ROLE "," cnf_formula annotations ")"  "." 
 annotations          :  "," source optional_info | null
 FORMULA_ROLE         : LOWER_WORD | "axiom" | "hypothesis" | "definition" | "assumption" | "lemma" | "theorem" | "corollary" | "conjecture" | "negated_conjecture" | "plain" | "type" | "fi_domain" | "fi_functors" | "fi_predicates" | "unknown"
-thf_formula          : thf_logic_formula | thf_atom_typing | thf_subtype | thf_sequent
-thf_logic_formula    : thf_unitary_formula | thf_unary_formula | thf_binary_formula | thf_defined_infix
-thf_binary_formula   : thf_binary_nonassoc | thf_binary_assoc | thf_binary_type
-thf_binary_nonassoc  : thf_unit_formula NONASSOC_CONNECTIVE thf_unit_formula
-thf_binary_assoc     : thf_or_formula | thf_and_formula | thf_apply_formula
-thf_or_formula       : thf_unit_formula VLINE thf_unit_formula | thf_or_formula VLINE thf_unit_formula
-thf_and_formula      : thf_unit_formula "&" thf_unit_formula | thf_and_formula "&" thf_unit_formula
-thf_apply_formula    : thf_unit_formula "@" thf_unit_formula | thf_apply_formula "@" thf_unit_formula
-thf_unit_formula     : thf_unitary_formula | thf_unary_formula | thf_defined_infix
-thf_preunit_formula  : thf_unitary_formula | thf_prefix_unary
-thf_unitary_formula  : thf_quantified_formula | thf_atomic_formula | variable |  "(" thf_logic_formula ")" 
-thf_quantified_formula : thf_quantification thf_unit_formula
-thf_quantification   : THF_QUANTIFIER "[" thf_variable_list "]" ":"
-thf_variable_list    : thf_typed_variable | thf_typed_variable "," thf_variable_list
-thf_typed_variable   : variable ":" thf_top_level_type
-thf_unary_formula    : thf_prefix_unary | thf_infix_unary
-thf_prefix_unary     : UNARY_CONNECTIVE thf_preunit_formula
-thf_infix_unary      : thf_unitary_term INFIX_INEQUALITY thf_unitary_term
-thf_atomic_formula   : thf_plain_atomic | thf_defined_atomic | thf_system_atomic | thf_fof_function
-thf_plain_atomic     : constant | thf_tuple 
-thf_defined_atomic   : DEFINED_CONSTANT | thf_conditional | thf_let | "(" thf_conn_term ")"  | thf_defined_term
-thf_defined_term     : DEFINED_TERM | TH1_DEFINED_TERM
-thf_defined_infix    : thf_unitary_term defined_infix_pred thf_unitary_term
-thf_system_atomic    : SYSTEM_CONSTANT
-thf_fof_function     : FUNCTOR "(" thf_arguments ")"  | DEFINED_FUNCTOR "(" thf_arguments ")"  | SYSTEM_FUNCTOR "(" thf_arguments ")" 
-thf_conditional      : "$ite" "(" thf_logic_formula "," thf_logic_formula "," thf_logic_formula ")" 
-thf_let              : "$let" "(" thf_let_types "," thf_let_defns "," thf_formula ")" 
-thf_let_types        : thf_atom_typing | [thf_atom_typing_list]
-thf_atom_typing_list : thf_atom_typing | thf_atom_typing "," thf_atom_typing_list
-thf_let_defns        : thf_let_defn | [thf_let_defn_list]
-thf_let_defn         : thf_logic_formula ASSIGNMENT thf_logic_formula
-thf_let_defn_list    : thf_let_defn | thf_let_defn "," thf_let_defn_list
-thf_unitary_term     : thf_atomic_formula | variable | "(" thf_logic_formula ")" 
-thf_tuple            : [] | [thf_formula_list]
-thf_formula_list     : thf_logic_formula | thf_logic_formula "," thf_formula_list
-thf_conn_term        : NONASSOC_CONNECTIVE | ASSOC_CONNECTIVE | INFIX_EQUALITY | INFIX_INEQUALITY | UNARY_CONNECTIVE
-thf_arguments        : thf_formula_list
-thf_atom_typing      : untyped_atom ":" thf_top_level_type | "(" thf_atom_typing ")" 
-thf_top_level_type   : thf_unitary_type | thf_mapping_type | thf_apply_type
-thf_unitary_type     : thf_unitary_formula | thf_atomic_type | th1_quantified_type
-thf_atomic_type      : type_constant | defined_type | variable | thf_mapping_type |  "(" thf_atomic_type ")" 
-th1_quantified_type  : "!>" [thf_variable_list] ":" thf_unitary_type
-thf_apply_type       : thf_apply_formula
-thf_binary_type      : thf_mapping_type | thf_xprod_type | thf_union_type 
-thf_mapping_type     : thf_unitary_type ARROW thf_unitary_type | thf_unitary_type ARROW thf_mapping_type
-thf_xprod_type       : thf_unitary_type STAR thf_unitary_type | thf_xprod_type STAR thf_unitary_type
-thf_union_type       : thf_unitary_type PLUS thf_unitary_type | thf_union_type PLUS thf_unitary_type
-thf_subtype          : untyped_atom SUBTYPE_SIGN atom
-thf_sequent          : thf_tuple GENTZEN_ARROW thf_tuple | "(" thf_sequent ")" 
 logic_defn_rule      : logic_defn_lhs ASSIGNMENT logic_defn_rhs
-logic_defn_lhs       : logic_defn_value | thf_top_level_type  | NAME | "$constants" | "$quantification" | "$consequence" | "$modalities"
-logic_defn_rhs       : logic_defn_value | thf_unitary_formula
+logic_defn_lhs       : logic_defn_value  | NAME | "$constants" | "$quantification" | "$consequence" | "$modalities"
+logic_defn_rhs       : logic_defn_value
 logic_defn_value     : DEFINED_CONSTANT | "$rigid" | "$flexible" | "$constant" | "$varying" | "$cumulative" | "$decreasing" | "$local" | "$global" | "$modal_system_K" | "$modal_system_T" | "$modal_system_D" | "$modal_system_S4" | "$modal_system_S5" | "$modal_axiom_K" | "$modal_axiom_T" | "$modal_axiom_B" | "$modal_axiom_D" | "$modal_axiom_4" | "$modal_axiom_5"
 tff_formula          : tff_logic_formula | tff_atom_typing | tff_subtype | tfx_sequent
 tff_logic_formula    : tff_unitary_formula | tff_unary_formula | tff_binary_formula | tff_defined_infix
@@ -223,8 +173,8 @@ name_list            : NAME | NAME "," name_list
 general_term         : general_data | general_data ":" general_term | general_list
 general_data         : ATOMIC_WORD | general_function | variable | NUMBER | DISTINCT_OBJECT | formula_data | "bind" "(" variable "," formula_data ")"  | "bind_type" "(" variable "," bound_type ")"
 general_function     : ATOMIC_WORD "(" general_terms ")"
-bound_type           : "$thf" "(" thf_top_level_type ")"  | "$tff" "(" tff_top_level_type ")" 
-formula_data         : "$thf" "(" thf_formula ")"  | "$tff" "(" tff_formula ")"  | "$fof" "(" fof_formula ")"  | "$cnf" "(" cnf_formula ")"  | "$fot" "(" fof_term ")" 
+bound_type           : "$tff" "(" tff_top_level_type ")" 
+formula_data         : "$tff" "(" tff_formula ")"  | "$fof" "(" fof_formula ")"  | "$cnf" "(" cnf_formula ")"  | "$fot" "(" fof_term ")" 
 general_list         : "[" "]" | "[" general_terms "]"
 general_terms        : general_term | general_term "," general_terms
 NAME                 : ATOMIC_WORD | INTEGER
