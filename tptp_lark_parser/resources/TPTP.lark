@@ -136,7 +136,7 @@ variable             : UPPER_WORD
 source               : dag_source | internal_source | external_source | "unknown" | "[" sources "]" | general_term
 sources              : source | source "," sources
 dag_source           : NAME | inference_record
-inference_record     : "inference" "(" inference_rule "," useful_info "," inference_parents ")" 
+inference_record     : "inference" "(" inference_rule "," general_list "," inference_parents ")" 
 inference_rule       : ATOMIC_WORD
 inference_parents    : "[" "]" | "[" parent_list "]"
 parent_list          : parent_info | parent_info "," parent_list
@@ -151,8 +151,7 @@ theory               : "theory" "(" THEORY_NAME optional_info ")"
 THEORY_NAME          : "equality" | "ac"
 creator_source       : "creator" "(" CREATOR_NAME optional_info ")" 
 CREATOR_NAME         : ATOMIC_WORD
-optional_info        :  "," useful_info | null
-useful_info          : general_list | "[" "]" | "[" info_items "]"
+optional_info        :  "," general_list | null
 info_items           : info_item | info_item "," info_items
 info_item            : FORMULA_ITEM | inference_item | general_function
 FORMULA_ITEM         : DESCRIPTION_ITEM | IQUOTE_ITEM
