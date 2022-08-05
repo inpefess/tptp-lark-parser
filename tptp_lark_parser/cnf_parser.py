@@ -89,7 +89,7 @@ class CNFParser(Transformer):
     >>> print(cnf_parser.pretty_print(clause))
     cnf(test, axiom, f(X,g(Y),h(Z,c1)) = f(X,Y,c2) | ~better(f(X), g(Y)) | $false() | this_is_a_test_case(), inference(resolution, [], [this, that, third])).
     >>> cnf_parser.token_map
-    {'functions': {'f': 0, 'g': 1, 'c1': 2, 'h': 3, 'c2': 4}, 'predicates': {'$false': 0, '=': 1, '!=': 2, 'better': 3, 'this_is_a_test_case': 4}, 'variables': {'X0': 0, 'X1': 1, ..., 'X999': 999, 'X': 1000, 'Y': 1001, 'Z': 1002}}
+    {'functions': {'f': 0, 'g': 1, 'c1': 2, 'h': 3, 'c2': 4, 'better': 5, 'this_is_a_test_case': 6}, 'predicates': {'$false': 0, '=': 1, '!=': 2, 'better': 3, 'this_is_a_test_case': 4}, 'variables': {'X0': 0, 'X1': 1, ..., 'X999': 999, 'X': 1000, 'Y': 1001, 'Z': 1002}}
     """
 
     def __init__(
@@ -256,7 +256,12 @@ class CNFParser(Transformer):
 
         :param children: parsed tree node's children
         """
-        return self._predicate(children)
+        return self._predicate(
+            [
+                self.token_lists["functions"][children[0].index],
+                children[0].arguments,
+            ]
+        )
 
     def fof_defined_infix_formula(self, children: List[Any]):
         """

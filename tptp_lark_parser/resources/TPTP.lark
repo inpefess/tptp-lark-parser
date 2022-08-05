@@ -23,9 +23,9 @@ fof_unitary_formula  : fof_quantified_formula | fof_atomic_formula | "(" fof_log
 fof_quantified_formula : FOF_QUANTIFIER "[" fof_variable_list "]" ":" fof_unit_formula
 fof_variable_list    : variable | variable "," fof_variable_list
 fof_atomic_formula   : fof_plain_atomic_formula | fof_defined_atomic_formula | fof_system_atomic_formula
-fof_plain_atomic_formula : proposition | predicate "(" fof_arguments ")"
+fof_plain_atomic_formula : fof_plain_term
 fof_defined_atomic_formula : fof_defined_plain_formula | fof_defined_infix_formula
-fof_defined_plain_formula : fof_defined_plain_term | defined_proposition | defined_predicate "(" fof_arguments ")" 
+fof_defined_plain_formula : fof_defined_plain_term | defined_predicate | defined_predicate "(" fof_arguments ")" 
 fof_defined_infix_formula : fof_term defined_infix_pred fof_term
 fof_system_atomic_formula : fof_system_term
 fof_plain_term       : constant | FUNCTOR "(" fof_arguments ")" 
@@ -57,8 +57,7 @@ atom                 : untyped_atom | DEFINED_CONSTANT
 untyped_atom         : constant | SYSTEM_CONSTANT
 proposition          : predicate
 predicate            : ATOMIC_WORD
-defined_proposition  : defined_predicate | "$true" | "$false"
-defined_predicate    : ATOMIC_DEFINED_WORD | "$distinct" | "$less" | "$lesseq" | "$greater" | "$greatereq" | "$is_int" | "$is_rat" | "$box_P" | "$box_i" | "$box_int" | "$box" | "$dia_P" | "$dia_i" | "$dia_int" | "$dia"
+defined_predicate    : ATOMIC_DEFINED_WORD
 defined_infix_pred   : INFIX_EQUALITY
 system_proposition   : system_predicate
 system_predicate     : ATOMIC_SYSTEM_WORD
