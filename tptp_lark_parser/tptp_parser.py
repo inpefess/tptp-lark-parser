@@ -108,6 +108,7 @@ class TPTPParser:
             .joinpath(os.path.join("resources", "TPTP.lark"))
             .read_text(),
             start="tptp_file",
+            parser="lalr",
         )
         self.tptp_folder = tptp_folder
         self.cnf_parser = CNFParser(tokens_filename, extendable)
