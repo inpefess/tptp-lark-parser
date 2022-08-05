@@ -15,4 +15,4 @@
 # pylint: disable=unused-import
 from tptp_lark_parser.tptp_parser import TPTPParser  # noqa: F401
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
