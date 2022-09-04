@@ -13,14 +13,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
-|Binder|\ |PyPI version|\ |Anaconda|\ |CircleCI|\ |AppveyorCI|\ |Documentation Status|\ |codecov|
+|Binder|\ |PyPI version|\ |Anaconda|\ |CircleCI|\ |AppveyorCI|\ |Documentation Status|\ |codecov|\ |Zenodo|
 
 tptp-lark-parser
 ================
 
-``tptp-lark-parser`` is an parser for the `TPTP library
-<http://tptp.org>`__ language using the `Lark parser
-<https://github.com/lark-parser/lark>`__.
+``tptp-lark-parser`` is a parser for the `TPTP library
+<https://tptp.org>`__ language using the `Lark parser
+<https://github.com/lark-parser/lark>`__. For now, only CNF
+sublanguage is supported.
 
 How to Install
 ==============
@@ -44,7 +45,7 @@ One can also run it in a Docker container:
    docker build -t tptp-lark-parser https://github.com/inpefess/tptp-lark-parser.git
    docker run -it --rm -p 8888:8888 tptp-lark-parser jupyter-lab --ip=0.0.0.0 --port=8888
 
-How to use
+How to Use
 ==========
 
 .. code:: python
@@ -60,6 +61,36 @@ notebook <https://github.com/inpefess/tptp-lark-parser/blob/master/examples/exam
 or run it in
 `Binder <https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=example.ipynb>`__
 for more information.
+
+More Documentation
+==================
+
+More documentation can be found
+`here <https://tptp-lark-parser.readthedocs.io/en/latest>`__.
+
+Similar Projects
+================
+
+There are many TPTP parsers in different languages:
+
+* `C <https://github.com/TPTPWorld/SyntaxBNF>`__ (by TPTP's creator Geoff Sutcliffe)
+* `Java <https://github.com/marklemay/tptpParser>`__
+* `C++ <https://github.com/leoprover/tptp-parser>`__
+* `JavaScript <https://www.npmjs.com/package/tptp>`__
+* `Rust <https://github.com/MichaelRawson/tptp>`__
+* `Common Lisp <https://github.com/lisphacker/cl-tptp-parser>`__
+* `Scala <https://github.com/leoprover/scala-tptp-parser>`__
+* `Haskell <https://github.com/aztek/tptp>`__
+* `OCaml <https://github.com/Gbury/dolmen>`__
+
+There also is `another parser in Python <https://github.com/AndrzejKucik/tptp_python_parser>`__ containing only the Lark syntax file.
+
+How to Cite
+===========
+
+If you want to cite the `tptp-lark-parser` in your research paper,
+please use the following doi:
+`<https://doi.org/10.5281/zenodo.7040540>`__.
 
 How to Contribute
 =================
@@ -88,12 +119,6 @@ Reporting issues or problems with the software
 Questions and bug reports are welcome on `the
 tracker <https://github.com/inpefess/tptp-lark-parser/issues>`__.
 
-More documentation
-==================
-
-More documentation can be found
-`here <https://tptp-lark-parser.readthedocs.io/en/latest>`__.
-
 .. |PyPI version| image:: https://badge.fury.io/py/tptp-lark-parser.svg
    :target: https://badge.fury.io/py/tptp-lark-parser
 .. |CircleCI| image:: https://circleci.com/gh/inpefess/tptp-lark-parser.svg?style=svg
@@ -108,3 +133,5 @@ More documentation can be found
    :target: https://ci.appveyor.com/project/inpefess/tptp-lark-parser
 .. |Anaconda| image:: https://anaconda.org/conda-forge/tptp-lark-parser/badges/version.svg
    :target: https://anaconda.org/conda-forge/tptp-lark-parser
+.. |Zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7040540.svg
+   :target: https://doi.org/10.5281/zenodo.7040540
