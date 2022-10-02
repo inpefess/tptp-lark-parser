@@ -1,8 +1,10 @@
 version: 2.1
 jobs:
   build-and-test:
-    docker:
-      - image: inpefess/multipython
+    macos:
+      xcode: 12.5.1
+    # docker:
+    #   - image: inpefess/multipython
     steps:
       - checkout
       - run:
