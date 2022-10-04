@@ -95,29 +95,7 @@ please use the following doi:
 How to Contribute
 =================
 
-`Pull requests <https://github.com/inpefess/tptp-lark-parser/pulls>`__ are
-welcome. To start:
-
-.. code:: sh
-
-   git clone https://github.com/inpefess/tptp-lark-parser
-   cd tptp-lark-parser
-   # activate python virtual environment with Python 3.7+
-   pip install -U pip
-   pip install -U setuptools wheel poetry
-   poetry install
-   # recommended but not necessary
-   pre-commit install
-
-To check the code quality before creating a pull request, one might run
-the script ``local-build.sh``. It locally does nearly the same as the CI
-pipeline after the PR is created.
-
-Reporting issues or problems with the software
-==============================================
-
-Questions and bug reports are welcome on `the
-tracker <https://github.com/inpefess/tptp-lark-parser/issues>`__.
+Please read :doc:`the Code of Conduct <code-of-conduct>` and then follow :doc:`the contribution guide <contributing>`
 
 .. |PyPI version| image:: https://badge.fury.io/py/tptp-lark-parser.svg
    :target: https://badge.fury.io/py/tptp-lark-parser
