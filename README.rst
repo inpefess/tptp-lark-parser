@@ -98,7 +98,7 @@ How to Contribute
 Please read `the Code of Conduct
 <https://tptp-lark-parser.readthedocs.io/en/latest/code-of-conduct.html>`__
 and then follow `the contribution guide
-<https://tptp-lark-parser.readthedocs.io/en/latest/contributing.html>`
+<https://tptp-lark-parser.readthedocs.io/en/latest/contributing.html>`__.
 
 .. |PyPI version| image:: https://badge.fury.io/py/tptp-lark-parser.svg
    :target: https://badge.fury.io/py/tptp-lark-parser
