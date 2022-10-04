@@ -95,7 +95,10 @@ please use the following doi:
 How to Contribute
 =================
 
-Please read :doc:`the Code of Conduct <code-of-conduct>` and then follow :doc:`the contribution guide <contributing>`
+Please read `the Code of Conduct
+<https://tptp-lark-parser.readthedocs.io/en/latest/code-of-conduct.html>`__
+and then follow `the contribution guide
+<https://tptp-lark-parser.readthedocs.io/en/latest/contributing.html>`
 
 .. |PyPI version| image:: https://badge.fury.io/py/tptp-lark-parser.svg
    :target: https://badge.fury.io/py/tptp-lark-parser
