@@ -20,6 +20,8 @@
    :caption: Contents:
 	     
    package-documentation
+   code-of-conduct
+   contributing
 
 Indices and tables
 ==================
