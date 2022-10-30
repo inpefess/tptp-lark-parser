@@ -57,9 +57,9 @@ How to Use
    clause_literals = parsed_text[0].literals
    
 See `the
-notebook <https://github.com/inpefess/tptp-lark-parser/blob/master/examples/example.ipynb>`__
+notebook <https://github.com/inpefess/tptp-lark-parser/blob/master/notebooks/usage-example.ipynb>`__
 or run it in
-`Binder <https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=example.ipynb>`__
+`Binder <https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=usage-example.ipynb>`__
 for more information.
 
 More Documentation
@@ -109,7 +109,7 @@ and then follow `the contribution guide
 .. |codecov| image:: https://codecov.io/gh/inpefess/tptp-lark-parser/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/inpefess/tptp-lark-parser
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=example.ipynb
+   :target: https://mybinder.org/v2/gh/inpefess/tptp-lark-parser/HEAD?labpath=usage-example.ipynb
 .. |AppveyorCI| image:: https://ci.appveyor.com/api/projects/status/7n0g3a3ag5hjtfi0?svg=true
    :target: https://ci.appveyor.com/project/inpefess/tptp-lark-parser
 .. |Anaconda| image:: https://anaconda.org/conda-forge/tptp-lark-parser/badges/version.svg
