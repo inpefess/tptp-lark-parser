@@ -1,4 +1,4 @@
-FROM jupyter/base-notebook:python-3.9.12
+FROM jupyter/base-notebook:python-3.10.6
 USER root
 COPY examples/*.ipynb /home/jovyan/
 RUN chown -R jovyan /home/jovyan/*.ipynb
