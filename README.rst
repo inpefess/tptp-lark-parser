@@ -18,6 +18,9 @@
 tptp-lark-parser
 ================
 
+.. attention::
+   The project is inactive.
+
 ``tptp-lark-parser`` is a parser for the `TPTP library
 <https://tptp.org>`__ language using the `Lark parser
 <https://github.com/lark-parser/lark>`__. For now, only CNF

@@ -16,7 +16,7 @@ classifiers=[
 	"Operating System :: OS Independent",
 	"Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Mathematics",
-	"Development Status :: 3 - Alpha",
+	"Development Status :: 7 - Inactive",
 	"Environment :: Console",
 	"Natural Language :: English",
 	"Typing :: Typed"
