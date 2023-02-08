@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tptp-lark-parser"
-version = "0.1.2"
+version = "0.2.0"
 description = "A TPTP parser using Lark"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -16,7 +16,7 @@ classifiers=[
 	"Operating System :: OS Independent",
 	"Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Mathematics",
-	"Development Status :: 3 - Alpha",
+	"Development Status :: 7 - Inactive",
 	"Environment :: Console",
 	"Natural Language :: English",
 	"Typing :: Typed"
@@ -123,7 +123,7 @@ commands =
 github_url = "https://github.com/inpfess/tptp-lark-parser/"
 
 [tool.tbump.version]
-current = "0.1.2"
+current = "0.2.0"
 regex = '''
   (?P<major>\d+)
   \.
